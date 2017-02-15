@@ -24,9 +24,9 @@ type ColumnGenerator struct {
 	autoIncrement bool
 	notNull       bool
 	generated     bool
-	comment       *string
-	defaultValue  *string
-	charset       *string
+	comment       string
+	defaultValue  string
+	charset       string
 }
 
 func (f *ColumnGenerator) Unique() *ColumnGenerator {
@@ -50,7 +50,7 @@ func (f *ColumnGenerator) Index(name string, unique bool, order Order, length in
 }
 func (f *ColumnGenerator) Primary(comment ...string) *ColumnGenerator {
 	var c string
-	if len(comment)>0{
+	if len(comment) > 0 {
 		c = comment[0]
 	}
 	f.table.primaryKey = NewPrimaryKeyGenerator([]string{f.name}, c)
@@ -81,11 +81,11 @@ func (f *ColumnGenerator) Generated() *ColumnGenerator {
 	return f
 }
 func (f *ColumnGenerator) DefaultValue(v string) *ColumnGenerator {
-	f.defaultValue = &v
+	f.defaultValue = v
 	return f
 }
 func (f *ColumnGenerator) Comment(v string) *ColumnGenerator {
-	f.comment = &v
+	f.comment = v
 	return f
 }
 
@@ -105,21 +105,21 @@ func (f *ColumnGenerator) Sql() string {
 	} else {
 		sql += " NULL"
 	}
-	if f.defaultValue != nil {
+	if f.defaultValue != "" {
 		if f.generated {
-			sql += " GENERATED ALWAYS AS ('" + strings.Replace(*f.defaultValue, "'", "\\'", -1) + "')"
+			sql += " GENERATED ALWAYS AS ('" + strings.Replace(f.defaultValue, "'", "\\'", -1) + "')"
 		} else {
-			sql += " DEFAULT '" + strings.Replace(*f.defaultValue, "'", "\\'", -1) + "'"
+			sql += " DEFAULT '" + strings.Replace(f.defaultValue, "'", "\\'", -1) + "'"
 		}
 	}
 	if f.autoIncrement {
 		sql += " AUTO_INCREMENT"
 	}
-	if f.charset != nil {
-		sql += "CHARACTER SET '" + string(*f.charset) + "' NULL"
+	if f.charset != "" {
+		sql += "CHARACTER SET '" + string(f.charset) + "' NULL"
 	}
-	if f.defaultValue != nil {
-		sql += " COMMENT '" + strings.Replace(*f.comment, "'", "\\'", -1) + "'"
+	if f.defaultValue != "" {
+		sql += " COMMENT '" + strings.Replace(f.comment, "'", "\\'", -1) + "'"
 	}
 	return sql
 }

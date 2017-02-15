@@ -3,18 +3,22 @@ package migrates
 import (
 	"errors"
 
-	"github.com/jmoiron/sqlx"
-	"fmt"
 	"strings"
+
+	"github.com/jmoiron/sqlx"
+	"github.com/urfave/cli"
 )
 
+var commands []cli.Command
+
 type MigrateApplication struct {
-	Dsn        string
-	Migrations []Migration
+	dsn                string
+	schemaVersionTable string
+	migrations         []Migration
 }
 
 func (m *MigrateApplication) AddMigration(version int, name string, up func(*Scope), down func(*Scope)) error {
-	for _, mi := range m.Migrations {
+	for _, mi := range m.migrations {
 		if mi.Version == version {
 			return errors.New("")
 		}
@@ -23,29 +27,35 @@ func (m *MigrateApplication) AddMigration(version int, name string, up func(*Sco
 	up(upScope)
 	upScripts := make([]string, len(upScope.queries))
 	for i, q := range upScope.queries {
-		upScripts[i]= q.Sql()
+		upScripts[i] = q.Sql()
 	}
 	downScope := &Scope{}
 	down(downScope)
 	downScripts := make([]string, len(downScope.queries))
 	for i, q := range downScope.queries {
-		downScripts[i]= q.Sql()
+		downScripts[i] = q.Sql()
 	}
-	m.Migrations = append(m.Migrations, Migration{
-		Name: name,
-		Version: version,
-		UpScript: strings.Join(upScripts, ";"),
+	m.migrations = append(m.migrations, Migration{
+		Name:       name,
+		Version:    version,
+		UpScript:   strings.Join(upScripts, ";"),
 		DownScript: strings.Join(downScripts, ";"),
 	})
 
 	return nil
 }
-
+func (m *MigrateApplication) SetSchemaVersionTable(name string) {
+	m.schemaVersionTable = name
+}
 func (m *MigrateApplication) Run(args []string) {
-	fmt.Println("Found ", len(m.Migrations), " migrations")
-	fmt.Println(m.Migrations[0].UpScript)
-	fmt.Println(m.Migrations[0].DownScript)
-	fmt.Println("Running migrations")
+	app := cli.NewApp()
+	app.Version = "1.0"
+	app.Commands = commands
+	if app.Metadata == nil {
+		app.Metadata = make(map[string]interface{})
+	}
+	app.Metadata["migrations"] = m.migrations
+	app.Run(args)
 }
 
 func NewApp(dsn string) *MigrateApplication {
