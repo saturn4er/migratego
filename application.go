@@ -2,64 +2,61 @@ package migrates
 
 import (
 	"errors"
-
+	"reflect"
 	"strings"
 
-	"github.com/jmoiron/sqlx"
-	"github.com/urfave/cli"
+	"database/sql"
+	"fmt"
 )
 
-var commands []cli.Command
-
 type MigrateApplication struct {
-	dsn                string
-	schemaVersionTable string
-	migrations         []Migration
+	dsn            string
+	dbVersionTable string
+	migrations     []Migration
+	db             *sql.DB
 }
 
 func (m *MigrateApplication) AddMigration(version int, name string, up func(*Scope), down func(*Scope)) error {
 	for _, mi := range m.migrations {
 		if mi.Version == version {
-			return errors.New("")
+			return errors.New("Error while adding migration: with such version already exists")
 		}
 	}
-	upScope := &Scope{}
-	up(upScope)
-	upScripts := make([]string, len(upScope.queries))
-	for i, q := range upScope.queries {
-		upScripts[i] = q.Sql()
-	}
-	downScope := &Scope{}
-	down(downScope)
-	downScripts := make([]string, len(downScope.queries))
-	for i, q := range downScope.queries {
-		downScripts[i] = q.Sql()
-	}
+	upScripts := getScopeScripts(up)
+	downScripts := getScopeScripts(down)
 	m.migrations = append(m.migrations, Migration{
 		Name:       name,
 		Version:    version,
 		UpScript:   strings.Join(upScripts, ";"),
 		DownScript: strings.Join(downScripts, ";"),
 	})
+	reflect.TypeOf(func(ab string) {}).String()
 
 	return nil
 }
 func (m *MigrateApplication) SetSchemaVersionTable(name string) {
-	m.schemaVersionTable = name
+	m.dbVersionTable = name
 }
 func (m *MigrateApplication) Run(args []string) {
-	app := cli.NewApp()
-	app.Version = "1.0"
-	app.Commands = commands
-	if app.Metadata == nil {
-		app.Metadata = make(map[string]interface{})
+	err := RunToolCli(m, args)
+	if err != nil {
+	    fmt.Println(err)
 	}
-	app.Metadata["migrations"] = m.migrations
-	app.Run(args)
+}
+
+func getScopeScripts(p func(*Scope)) []string {
+	scope := new(Scope)
+	p(scope)
+	scripts := make([]string, len(scope.queries))
+	for i, q := range scope.queries {
+		scripts[i] = q.Sql()
+	}
+	return scripts
 }
 
 func NewApp(dsn string) *MigrateApplication {
-	sqlx.Connect("mysql", dsn)
 	result := new(MigrateApplication)
+	result.dsn = dsn
+	result.dbVersionTable = "shema_version"
 	return result
 }

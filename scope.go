@@ -26,8 +26,3 @@ func (s *Scope) RawQuery(query string) {
 	s.queries = append(s.queries, Query(query))
 
 }
-
-//func (s *Scope) AlterTable(tableName string, sc func(scope CreateTableQuery)) {
-//	query := NewTable(tableName, sc)
-//	s.queries = append(s.queries, query)
-//}

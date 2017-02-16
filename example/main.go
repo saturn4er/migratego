@@ -7,7 +7,7 @@ import (
 )
 
 func main() {
-	app := migrates.NewApp("root@127.0.0.1@/dbname")
+	app := migrates.NewApp("root@tcp(192.168.99.100:3306)/dbname")
 	app.AddMigration(1, "initApp",
 		func(s *migrates.Scope) {
 			s.CreateTable("hello", func(t migrates.CreateTable) {
