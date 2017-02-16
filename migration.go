@@ -1,22 +1,22 @@
 package migrates
 
 type Migration struct {
-	Version    int
+	Number     int
 	Name       string
 	UpScript   string
 	DownScript string
 }
 
-type byVersion []Migration
+type byNumber []Migration
 
-func (s byVersion) Len() int {
+func (s byNumber) Len() int {
 	return len(s)
 }
 
-func (s byVersion) Less(i, j int) bool {
-	return s[i].Version < s[j].Version
+func (s byNumber) Less(i, j int) bool {
+	return s[i].Number < s[j].Number
 }
 
-func (s byVersion) Swap(i, j int) {
+func (s byNumber) Swap(i, j int) {
 	s[i], s[j] = s[j], s[i]
 }

@@ -1,12 +1,12 @@
 package migrates
 
 import (
-	"errors"
 	"reflect"
 	"strings"
 
 	"database/sql"
 	"fmt"
+	"os"
 )
 
 type MigrateApplication struct {
@@ -16,23 +16,22 @@ type MigrateApplication struct {
 	db             *sql.DB
 }
 
-func (m *MigrateApplication) AddMigration(version int, name string, up func(*Scope), down func(*Scope)) error {
+func (m *MigrateApplication) AddMigration(number int, name string, up func(*Scope), down func(*Scope)) {
 	for _, mi := range m.migrations {
-		if mi.Version == version {
-			return errors.New("Error while adding migration: with such version already exists")
+		if mi.Number == number {
+			fmt.Println("Error while adding migration " + name + ": migration with such number already exists")
+			os.Exit(1)
 		}
 	}
 	upScripts := getScopeScripts(up)
 	downScripts := getScopeScripts(down)
 	m.migrations = append(m.migrations, Migration{
 		Name:       name,
-		Version:    version,
+		Number:     number,
 		UpScript:   strings.Join(upScripts, ";"),
 		DownScript: strings.Join(downScripts, ";"),
 	})
 	reflect.TypeOf(func(ab string) {}).String()
-
-	return nil
 }
 func (m *MigrateApplication) SetSchemaVersionTable(name string) {
 	m.dbVersionTable = name
@@ -40,7 +39,7 @@ func (m *MigrateApplication) SetSchemaVersionTable(name string) {
 func (m *MigrateApplication) Run(args []string) {
 	err := RunToolCli(m, args)
 	if err != nil {
-	    fmt.Println(err)
+		fmt.Println(err)
 	}
 }
 

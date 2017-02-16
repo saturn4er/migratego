@@ -24,6 +24,22 @@ type Version struct {
 	AppliedAt  time.Time `db:"applied_at"`
 }
 
+func (v *Version) SameAsMigration(m *Migration) bool {
+	if v.Number != m.Number{
+		return false
+	}
+	if v.Name != m.Name {
+		return false
+	}
+	if v.UpScript != m.UpScript {
+		return false
+	}
+	if v.DownScript != m.DownScript {
+		return false
+	}
+	return true
+}
+
 func (d *Migrator) prepareDBVersionTable() error {
 	exists, err := d.dbVersionTableExists()
 	if err != nil {
@@ -51,16 +67,27 @@ func (d *Migrator) createDBVersionTable() error {
 	}
 	return nil
 }
-func (d *Migrator) getAllVersion() ([]Version, error) {
+func (d *Migrator) getAllVersions() ([]Version, error) {
 	result := []Version{}
-	err := d.db.Select(&result, "SELECT `num`, `name`, `up_script`, `down_script`, `applied_at` FROM `"+d.databaseVersionTable+"` ORDER BY `applied_at` DESC")
+	err := d.db.Select(&result, "SELECT `num`, `name`, `up_script`, `down_script`, `applied_at` FROM `"+d.databaseVersionTable+"` ORDER BY `applied_at` ASC")
+	if err == sql.ErrNoRows {
+		return result, nil
+	}
 	return result, err
 }
-func (d *Migrator) getCurrentVersion() (Version, error) {
-	result := Version{}
+func (d *Migrator) getCurrentVersion() (*Version, error) {
+	result := &Version{}
 	err := d.db.Get(&result, "SELECT * FROM `"+d.databaseVersionTable+"` ORDER BY `applied_at` DESC")
+	if err != nil && err == sql.ErrNoRows {
+	    return nil, nil
+	}
 	return result, err
 }
+//func (d *Migrator) downgradeVersion(v *Version) (*Version, error) {
+//
+//	err := d.db.Get(&result, "SELECT * FROM `"+d.databaseVersionTable+"` ORDER BY `applied_at` DESC")
+//	return result, err
+//}
 func (d *Migrator) dbVersionTableExists() (bool, error) {
 	var tableName string
 	err := d.db.QueryRow("SHOW TABLES LIKE '" + d.databaseVersionTable + "'").Scan(&tableName)
@@ -87,7 +114,7 @@ func NewMigrator(dbVersionTable, dsn string, migrations []Migration) (*Migrator,
 	}
 	err = db.Ping()
 	if err != nil {
-		return nil, errors.New("connected to database, but ping error: " + err.Error())
+		return nil, errors.New("can't connect to database: " + err.Error())
 	}
 	result := &Migrator{
 		db:                   db,
@@ -96,3 +123,4 @@ func NewMigrator(dbVersionTable, dsn string, migrations []Migration) (*Migrator,
 	}
 	return result, nil
 }
+
