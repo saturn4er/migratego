@@ -36,7 +36,7 @@ func (d *dropTablesGenerator) Sql() string {
 	return sql
 }
 
-func NewDropTablesGenerator(tableNames... string) DropTablesGenerator {
+func NewDropTablesGenerator(tableNames ...string) DropTablesGenerator {
 	return &dropTablesGenerator{
 		tables: tableNames,
 	}

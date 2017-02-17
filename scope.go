@@ -24,5 +24,4 @@ func (s *Scope) CreateTable(tableName string, sc func(scope CreateTable)) {
 
 func (s *Scope) RawQuery(query string) {
 	s.queries = append(s.queries, Query(query))
-
 }

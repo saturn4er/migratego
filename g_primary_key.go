@@ -18,7 +18,7 @@ func (p *PrimaryKeyGenerator) Sql() string {
 
 func NewPrimaryKeyGenerator(columns []string, comment string) *PrimaryKeyGenerator {
 	return &PrimaryKeyGenerator{
-		columns:   columns,
-		comment:   comment,
+		columns: columns,
+		comment: comment,
 	}
 }

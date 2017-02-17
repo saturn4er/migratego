@@ -1,6 +1,7 @@
 package migrates
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"sort"
@@ -28,80 +29,111 @@ func RunToolCli(m *MigrateApplication, args []string) error {
 			Aliases: []string{"c"},
 			Usage:   "Current version of database",
 			Action: func(c *cli.Context) error {
-				current, err := mg.getCurrentVersion()
+				applied, err := mg.getAppliedMigrations()
 				if err != nil {
 					return err
 				}
-				if current == nil {
+				if len(applied) == 0 {
 					fmt.Println("There's no migrations applied to database. Look's like it's empty")
 					return nil
 				}
-
-				fmt.Printf("Your databse is on %v #%v\n", current.Name, current.Number)
-				return nil
-			},
-		},
-		{
-			Name:    "latest",
-			Aliases: []string{"la"},
-			Usage:   "Latest migration",
-			Action: func(c *cli.Context) error {
-				latestMigration := LatestMigration(m.migrations)
-				if latestMigration == nil {
-					fmt.Println("There's no migrations yet")
-				}
-				fmt.Printf("Latest migration is %v #%v\n", latestMigration.Name, latestMigration.Number)
+				ShowMigrations(applied, true)
 				return nil
 			},
 		},
 		{
 			Name:    "list",
-			Aliases: []string{"li"},
+			Aliases: []string{"l"},
 			Usage:   "Migrations list",
 			Action: func(c *cli.Context) error {
-				ShowMigrations(m.migrations, mg)
+				applied, err := mg.getAppliedMigrations()
+				if err != nil {
+					return err
+				}
+				m := mergeMigrationsAppliedAt(m.migrations, applied)
+				ShowMigrations(m, true)
 				return nil
 			},
 		},
 		{
 			Name:    "migrate",
-			Aliases: []string{"mi"},
+			Aliases: []string{"m"},
 			Usage:   "Update database to actual version",
+			Flags: []cli.Flag{
+				cli.BoolFlag{
+					Name:  "yes,y",
+					Usage: "Do not ask for confirmations",
+				},
+				cli.BoolFlag{
+					Name:  "mwrap,nw",
+					Usage: "Do not wrap the code",
+				},
+				cli.StringFlag{
+					Name:  "backup,b",
+					Usage: "Path to backup file",
+				},
+			},
 			Action: func(c *cli.Context) error {
+				backupPath := c.String("backup")
+				if backupPath != "" {
+					backupFilePath, err := mg.backupDatabase(backupPath)
+					if err != nil {
+						return err
+					}
+					fmt.Println("Backup created at ", backupFilePath)
+				}
 				sort.Sort(byNumber(m.migrations))
-				applied, err := mg.getAllVersions()
+				applied, err := mg.getAppliedMigrations()
 				if err != nil {
 					return err
 				}
-				var toDowngrade []*Version
-				var toUpgrade []*Migration
-				var sameI = -1
-				var tableData [][]string
-				for i, a := range applied {
-					if len(m.migrations)-1 < i || !a.SameAsMigration(&m.migrations[i]) {
-						for j := len(applied) - 1; j >= i; j-- {
-							apl := applied[j]
-							appliedDate := apl.AppliedAt.Format("02-01-2016 15:04:05")
-							toDowngrade = append(toDowngrade, &apl)
-							tableData = append(tableData, []string{strconv.Itoa(apl.Number), apl.Name, "Down", apl.DownScript, appliedDate})
-						}
-						break
+
+				toDowngrade, toUpgrade := findWayBetweenMigrations(applied, m.migrations)
+				if len(toDowngrade) == 0 && len(toUpgrade) == 0 {
+					fmt.Println("Your database is already up-to-date")
+					return nil
+				}
+				fmt.Println("Migrations, that will be applied")
+				ShowMigrationsToMigrate(toDowngrade, toUpgrade, c.Bool("mwrap"))
+
+				if !c.Bool("y") {
+					ok, err := askForConfirmation("Apply migrations?")
+					if err != nil {
+						return errors.New("can't obtain confirmation response")
 					}
-					sameI = i
+					if !ok {
+						fmt.Println("Ok :(")
+						return nil
+					}
 				}
-				for i := sameI+1; i < len(m.migrations); i++ {
-					mi := m.migrations[i]
-					tableData = append(tableData, []string{strconv.Itoa(mi.Number), mi.Name, "Up", mi.UpScript, ""})
-					toUpgrade = append(toUpgrade, &mi)
+				for _, d := range toDowngrade {
+					fmt.Printf("Downgrading migration #%15d %15s....    ", d.Number, d.Name)
+					err := mg.applyMigration(&d, true)
+					if err != nil {
+						fmt.Println(err)
+						return nil
+					}
+					err = mg.deleteMigration(&d)
+					if err != nil {
+						fmt.Println("Can't deletem migration from migrations table: ", err)
+						return nil
+					}
+					fmt.Println("Ok!")
 				}
-				table := tablewriter.NewWriter(os.Stdout)
-				table.SetHeader([]string{"#", "Name", "Oper.", "Code", "Applied a" +
-					"t"})
-				table.SetColWidth(50)
-				table.SetAlignment(tablewriter.ALIGN_CENTER)
-				table.SetRowLine(true)
-				table.AppendBulk(tableData)
-				table.Render()
+				for _, d := range toUpgrade {
+					fmt.Printf("Applying migration    %15d %15s....    ", d.Number, d.Name)
+					err := mg.applyMigration(&d, false)
+					if err != nil {
+						fmt.Println(err)
+						return nil
+					}
+					err = mg.addMigration(&d)
+					if err != nil {
+						fmt.Println("Can't insert migration to migrations table: ", err)
+						return nil
+					}
+					fmt.Println("Ok!")
+				}
 				return nil
 			},
 		},
@@ -110,42 +142,92 @@ func RunToolCli(m *MigrateApplication, args []string) error {
 	tool.Run(args)
 	return nil
 }
-func LatestMigration(migrations []Migration) *Migration {
-	if len(migrations) == 0 {
-		return nil
+func ShowMigrationsToMigrate(toDowngrade, toUpgrade []Migration, wrapCode bool) {
+	var tableData [][]string
+	for _, apl := range toDowngrade {
+		applied := ""
+		if apl.AppliedAt != nil {
+			applied = apl.AppliedAt.Format("02-01-2016 15:04:05")
+		}
+		code := apl.DownScript
+		if len(code) > 47 && !wrapCode {
+			code = code[:47] + "..."
+		}
+		tableData = append(tableData, []string{strconv.Itoa(apl.Number), apl.Name, "Down", code, applied})
 	}
-	sort.Sort(byNumber(migrations))
-	return &migrations[len(migrations)-1]
+	for _, apl := range toUpgrade {
+		code := apl.UpScript
+		if len(code) > 47 && !wrapCode {
+			code = code[:47] + "..."
+		}
+		tableData = append(tableData, []string{strconv.Itoa(apl.Number), apl.Name, "Up", code, ""})
+	}
+	table := tablewriter.NewWriter(os.Stdout)
+	table.SetHeader([]string{"#", "Name", "Oper.", "Code", "Applied at"})
+	table.SetColWidth(50)
+	table.SetAlignment(tablewriter.ALIGN_CENTER)
+	table.SetRowLine(true)
+	table.AppendBulk(tableData)
+	table.Render()
 }
-func ShowMigrations(migrations []Migration, mg *Migrator) error {
+func ShowMigrations(migrations []Migration, showApplied bool) error {
 	sort.Sort(byNumber(migrations))
 	if len(migrations) == 0 {
 		fmt.Println("There's no migrations yet")
 	}
-	appliedV, err := mg.getAllVersions()
-	if err != nil {
-		return err
-	}
-	applieds := make(map[int]*Version)
-	for _, a := range appliedV {
-		ac := a
-		applieds[ac.Number] = &ac
-	}
 	table := tablewriter.NewWriter(os.Stdout)
-	table.SetHeader([]string{"#", "Name", "Applied at"})
+	var header = []string{"#", "Name", "Up", "Down"}
+	if showApplied {
+		header = append(header, "Applied at")
+	}
+	table.SetHeader(header)
 	table.SetAlignment(tablewriter.ALIGN_CENTER)
+	table.SetRowLine(true)
 	tableData := make([][]string, len(migrations))
 	i := 0
 	for _, mi := range migrations {
-		appliedDate := "---"
-		if val, ok := applieds[mi.Number]; ok {
-
-			appliedDate = val.AppliedAt.Format("02-01-2016 15:04:05")
+		tableData[i] = []string{strconv.Itoa(mi.Number), mi.Name, mi.UpScript, mi.DownScript}
+		if showApplied {
+			var applied = ""
+			if mi.AppliedAt != nil {
+				applied = mi.AppliedAt.Format("02-01-2016 15:04:05")
+			}
+			tableData[i] = append(tableData[i], applied)
 		}
-		tableData[i] = []string{strconv.Itoa(mi.Number), mi.Name, appliedDate}
 		i++
 	}
 	table.AppendBulk(tableData)
 	table.Render()
 	return nil
+}
+
+// mergeMigrationsAppliedAt set applied at in
+func mergeMigrationsAppliedAt(to []Migration, from []Migration) []Migration {
+	for i, mTo := range to {
+		for _, mFrom := range from {
+			if mTo.Compare(&mFrom) {
+				to[i].AppliedAt = mFrom.AppliedAt
+				break
+			}
+		}
+	}
+	return to
+}
+
+// findWayBetweenMigrations find path between two migrations list.
+func findWayBetweenMigrations(applied, actual []Migration) (toDowngrade []Migration, toUpgrade []Migration) {
+	var sameI = -1
+	for i, a := range applied {
+		if len(actual)-1 < i || !a.Compare(&actual[i]) {
+			for j := len(applied) - 1; j >= i; j-- {
+				toDowngrade = append(toDowngrade, applied[j])
+			}
+			break
+		}
+		sameI = i
+	}
+	for i := sameI + 1; i < len(actual); i++ {
+		toUpgrade = append(toUpgrade, actual[i])
+	}
+	return
 }
