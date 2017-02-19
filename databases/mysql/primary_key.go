@@ -3,9 +3,8 @@ package mysql
 import "strings"
 
 type PrimaryKeyGenerator struct {
-	indexName string
-	columns   []string
-	comment   string
+	columns []string
+	comment string
 }
 
 func (p *PrimaryKeyGenerator) Sql() string {
@@ -16,9 +15,11 @@ func (p *PrimaryKeyGenerator) Sql() string {
 	return sql
 }
 
-func NewPrimaryKeyGenerator(columns []string, comment string) *PrimaryKeyGenerator {
-	return &PrimaryKeyGenerator{
-		columns: columns,
-		comment: comment,
+func NewPrimaryKeyGenerator(columns []string, comment ...string) *PrimaryKeyGenerator {
+	result := new(PrimaryKeyGenerator)
+	result.columns = columns
+	if len(comment) != 0 {
+		result.comment = comment[0]
 	}
+	return result
 }

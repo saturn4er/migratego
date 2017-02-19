@@ -1,4 +1,5 @@
 [![Build Status](https://travis-ci.org/saturn4er/migratego.svg?branch=master)](https://travis-ci.org/saturn4er/migratego)
+[![Coverage Status](https://coveralls.io/repos/github/saturn4er/migratego/badge.svg?branch=master)](https://coveralls.io/github/saturn4er/migratego?branch=master)
 # MIGRATEGO
 Library to write and build migrations using Golang.
 
