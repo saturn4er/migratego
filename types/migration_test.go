@@ -45,7 +45,7 @@ func TestMigration(t *testing.T) {
 				Name:   "2",
 			},
 		}
-		sort.Sort(byNumber(a))
+		sort.Sort(ByNumber(a))
 		So(a[0].Name, ShouldEqual, "1")
 		So(a[1].Name, ShouldEqual, "2")
 		So(a[2].Name, ShouldEqual, "3")
