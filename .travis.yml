@@ -4,6 +4,8 @@ language: go
 services: mongodb
 
 before_install:
+  - go get github.com/urfave/cli
+  - go get github.com/olekukonko/tablewriter
   - mysql -e 'CREATE DATABASE migratego;'
 install:
   - go install ./cmd/migratego
