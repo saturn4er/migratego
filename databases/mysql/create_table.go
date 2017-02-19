@@ -78,30 +78,6 @@ func (c *createTableGenerator) Index(name string, unique bool) types.IndexGenera
 	c.indexes = append(c.indexes, index)
 	return index
 }
-// NewIndexColumn creates new IndexColumn
-// Usage NewIndexColumn(column, order[optional], length[optional])
-// orderType default value is ASC
-// length default value is int
-func (c *createTableGenerator) NewIndexColumn(column types.ColumnGenerator, params ...interface{}) types.IndexColumnGenerator {
-	var length int
-	var order = "ASC"
-	var ok bool
-	if len(params) > 0 {
-		if order, ok = params[0].(string); !ok {
-			panic("first param should be of type `string`")
-		}
-	}
-	if len(params) > 1 {
-		if length, ok = params[0].(int); !ok {
-			panic("first param should be of type `int`")
-		}
-	}
-	return &IndexColumn{
-		Column: column,
-		Order:  order,
-		Length: length,
-	}
-}
 func NewCreateTableGenerator(name string, sc func(types.CreateTableGenerator)) types.CreateTableGenerator {
 	result := &createTableGenerator{
 		name:          name,

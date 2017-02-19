@@ -13,10 +13,11 @@ import (
 type QueryBuilder interface {
 	DropTable(...string) types.DropTablesGenerator
 	CreateTable(string, func(types.CreateTableGenerator)) types.CreateTableGenerator
+	NewIndexColumn(column types.ColumnGenerator, params ...interface{}) types.IndexColumnGenerator
 	RawQuery(string)
-	GetSqls() []string
-}
+	Sqls() []string
 
+}
 type queryBuilderFunc func(QueryBuilder)
 
 type MigrateApplication interface {
@@ -62,7 +63,7 @@ func (m *migrateApplication) Run(args []string) {
 func (m *migrateApplication) getQueryBuilderScripts(p queryBuilderFunc) []string {
 	qb := getDriverQueryBuilder(m.driver)
 	p(qb)
-	return qb.GetSqls()
+	return qb.Sqls()
 }
 func (m *migrateApplication) getDriverClient() (types.DBClient, error) {
 	return getDriverClient(m.driver, m.dsn, m.dbVersionTable)

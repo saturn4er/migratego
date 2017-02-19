@@ -46,7 +46,12 @@ func (f *ColumnGenerator) AutoIncrement(primaryComment string) types.ColumnGener
 // Index add index to table for this column
 func (f *ColumnGenerator) Index(name string, unique bool, order string, length int) types.IndexGenerator {
 	index := newIndexGenerator(name, unique)
-	index.Columns(f.table.NewIndexColumn(f, order, length))
+
+	index.Columns(&IndexColumnGenerator{
+		Column: f,
+		Order:  order,
+		Length: length,
+	})
 	f.table.indexes = append(f.table.indexes, index)
 	return index
 }

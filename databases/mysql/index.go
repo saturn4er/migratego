@@ -1,8 +1,8 @@
 package mysql
 
 import (
-	"strconv"
 	"strings"
+
 	"github.com/saturn4er/migratego/types"
 )
 
@@ -19,7 +19,7 @@ func (i *IndexGenerator) Name(n string) types.IndexGenerator {
 	i.name = n
 	return i
 }
-func (i *IndexGenerator) Columns(c ...types.IndexColumnGenerator) types.IndexGenerator{
+func (i *IndexGenerator) Columns(c ...types.IndexColumnGenerator) types.IndexGenerator {
 	i.columns = append(i.columns, c...)
 	return i
 }
@@ -49,20 +49,6 @@ func (i *IndexGenerator) Sql() string {
 	}
 	sql += "INDEX " + wrapName(i.name) + " (" + strings.Join(columns, ",") + ")"
 	return sql
-}
-
-type IndexColumn struct {
-	Column types.ColumnGenerator
-	Order  string
-	Length int
-}
-
-func (i *IndexColumn) Sql() string {
-	var sql = wrapName(i.Column.GetName())
-	if i.Length > 0 {
-		sql += "(" + strconv.FormatInt(int64(i.Length), 10) + ")"
-	}
-	return sql + " " + string(i.Order)
 }
 
 func newIndexGenerator(name string, unique bool) types.IndexGenerator {

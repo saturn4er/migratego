@@ -14,13 +14,13 @@ import (
 	"github.com/saturn4er/migratego/types"
 )
 
-type Client struct {
+type MysqlClient struct {
 	tableName string
 	DB        *sqlx.DB
 	dsn       string
 }
 
-func (c *Client) Backup(path string) (string, error) {
+func (c *MysqlClient) Backup(path string) (string, error) {
 	dsn, err := mysql.ParseDSN(c.dsn)
 	if err != nil {
 		return "", errors.New("error parsing dsn: " + err.Error())
@@ -53,7 +53,7 @@ func (c *Client) Backup(path string) (string, error) {
 	return export.Filename(), nil
 }
 
-func (c *Client) ApplyMigration(migration *types.Migration, down bool) error {
+func (c *MysqlClient) ApplyMigration(migration *types.Migration, down bool) error {
 	var query string
 	if down {
 		query = migration.DownScript
@@ -67,14 +67,14 @@ func (c *Client) ApplyMigration(migration *types.Migration, down bool) error {
 	return nil
 }
 
-func (c *Client) InsertMigration(migration *types.Migration) error {
+func (c *MysqlClient) InsertMigration(migration *types.Migration) error {
 	now := time.Now()
 	migration.AppliedAt = &now
 	_, err := c.DB.NamedExec("INSERT INTO `"+c.tableName+"` (`num`, `name`, `up_script`, `down_script`,`applied_at`) VALUES (:num, :name, :up_script, :down_script, :applied_at);", migration)
 	return err
 }
 
-func (c *Client) GetAppliedMigrations() ([]types.Migration, error) {
+func (c *MysqlClient) GetAppliedMigrations() ([]types.Migration, error) {
 	result := []types.Migration{}
 	err := c.DB.Select(&result, "SELECT `num`, `name`, `up_script`, `down_script`, `applied_at` FROM `"+c.tableName+"` ORDER BY `applied_at` ASC")
 	if err == sql.ErrNoRows {
@@ -83,12 +83,12 @@ func (c *Client) GetAppliedMigrations() ([]types.Migration, error) {
 	return result, err
 }
 
-func (c *Client) RemoveMigration(migration *types.Migration) error {
+func (c *MysqlClient) RemoveMigration(migration *types.Migration) error {
 	_, err := c.DB.Exec("DELETE FROM `"+c.tableName+"` WHERE `num`=?", migration.Number)
 	return err
 }
 
-func (c *Client) PrepareTransactionsTable() error {
+func (c *MysqlClient) PrepareTransactionsTable() error {
 	exists, err := c.dbVersionTableExists()
 	if err != nil {
 		return err
@@ -102,7 +102,7 @@ func (c *Client) PrepareTransactionsTable() error {
 	return nil
 }
 
-func (c *Client) dbVersionTableExists() (bool, error) {
+func (c *MysqlClient) dbVersionTableExists() (bool, error) {
 	var tableName string
 	err := c.DB.QueryRow("SHOW TABLES LIKE '" + c.tableName + "'").Scan(&tableName)
 	if err != nil {
@@ -113,7 +113,7 @@ func (c *Client) dbVersionTableExists() (bool, error) {
 	}
 	return true, nil
 }
-func (c *Client) createDBVersionTable() error {
+func (c *MysqlClient) createDBVersionTable() error {
 	t := (&MysqlQueryBuilder{}).CreateTable(c.tableName, func(table types.CreateTableGenerator) {
 		table.Column("num", "int").NotNull().Primary()
 		table.Column("name", "text").NotNull()
@@ -128,7 +128,7 @@ func (c *Client) createDBVersionTable() error {
 	return nil
 }
 func NewClient(dsn, transactionsTableName string) (types.DBClient, error) {
-	result := new(Client)
+	result := new(MysqlClient)
 	d, err := mysql.ParseDSN(dsn)
 	if err != nil {
 		return nil, errors.New("bad dsn: " + err.Error())

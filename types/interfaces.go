@@ -12,7 +12,6 @@ type DropTablesGenerator interface {
 type CreateTableGenerator interface {
 	Column(name string, Type string) ColumnGenerator
 	Index(name string, unique bool) IndexGenerator
-	NewIndexColumn(ColumnGenerator, ...interface{}) IndexColumnGenerator
 	Sql() string
 }
 type ColumnGenerator interface {
