@@ -1,4 +1,4 @@
-package migrates
+package mysql
 
 import "strings"
 

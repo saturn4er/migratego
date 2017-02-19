@@ -1,22 +1,20 @@
-package migrates
+package mysql
 
-import "strings"
+import (
+	"strings"
+	"github.com/saturn4er/migratego/types"
+)
 
-type DropTablesGenerator interface {
-	Table(string) DropTablesGenerator
-	IfExists() DropTablesGenerator
-	Sql() string
-}
 type dropTablesGenerator struct {
 	tables   []string
 	ifExists bool
 }
 
-func (d *dropTablesGenerator) Table(tableName string) DropTablesGenerator {
+func (d *dropTablesGenerator) Table(tableName string) types.DropTablesGenerator {
 	d.tables = append(d.tables, tableName)
 	return d
 }
-func (d *dropTablesGenerator) IfExists() DropTablesGenerator {
+func (d *dropTablesGenerator) IfExists() types.DropTablesGenerator  {
 	d.ifExists = true
 	return d
 }
@@ -36,7 +34,7 @@ func (d *dropTablesGenerator) Sql() string {
 	return sql
 }
 
-func NewDropTablesGenerator(tableNames ...string) DropTablesGenerator {
+func NewDropTablesGenerator(tableNames ...string) types.DropTablesGenerator {
 	return &dropTablesGenerator{
 		tables: tableNames,
 	}

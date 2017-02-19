@@ -1,4 +1,4 @@
-package migratego
+package types
 
 import "time"
 
@@ -26,16 +26,16 @@ func (v *Migration) Compare(m *Migration) bool {
 	return true
 }
 
-type byNumber []Migration
+type ByNumber []Migration
 
-func (s byNumber) Len() int {
+func (s ByNumber) Len() int {
 	return len(s)
 }
 
-func (s byNumber) Less(i, j int) bool {
+func (s ByNumber) Less(i, j int) bool {
 	return s[i].Number < s[j].Number
 }
 
-func (s byNumber) Swap(i, j int) {
+func (s ByNumber) Swap(i, j int) {
 	s[i], s[j] = s[j], s[i]
 }

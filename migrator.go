@@ -1,4 +1,4 @@
-package migrates
+package migratego
 
 import (
 	"database/sql"
@@ -11,13 +11,15 @@ import (
 	"github.com/go-sql-driver/mysql"
 	"github.com/jmoiron/sqlx"
 	"github.com/keighl/barkup"
+	"github.com/saturn4er/migratego/types"
 )
 
 type Migrator struct {
 	databaseVersionTable string
+	driver               string
 	dsn                  string
 	db                   *sqlx.DB
-	migrations           []Migration
+	migrations           []types.Migration
 }
 
 func (d *Migrator) prepareDBVersionTable() error {
@@ -35,37 +37,37 @@ func (d *Migrator) prepareDBVersionTable() error {
 }
 
 func (d *Migrator) createDBVersionTable() error {
-	table := createTable{
-		name: d.databaseVersionTable,
-	}
-	table.Column("num", "int").NotNull().Primary()
-	table.Column("name", "text").NotNull()
-	table.Column("up_script", "text").NotNull()
-	table.Column("down_script", "text").NotNull()
-	table.Column("applied_at", "datetime").NotNull()
-	_, err := d.db.Exec(table.Sql())
+
+	t := getDriverQueryBuilder(d.driver).CreateTable(d.databaseVersionTable, func(table types.CreateTableGenerator) {
+		table.Column("num", "int").NotNull().Primary()
+		table.Column("name", "text").NotNull()
+		table.Column("up_script", "text").NotNull()
+		table.Column("down_script", "text").NotNull()
+		table.Column("applied_at", "datetime").NotNull()
+	})
+	_, err := d.db.Exec(t.Sql())
 	if err != nil {
 		return errors.New("can't create db version table: " + err.Error())
 	}
 	return nil
 }
-func (d *Migrator) getAppliedMigrations() ([]Migration, error) {
-	result := []Migration{}
+func (d *Migrator) getAppliedMigrations() ([]types.Migration, error) {
+	result := []types.Migration{}
 	err := d.db.Select(&result, "SELECT `num`, `name`, `up_script`, `down_script`, `applied_at` FROM `"+d.databaseVersionTable+"` ORDER BY `applied_at` ASC")
 	if err == sql.ErrNoRows {
 		return result, nil
 	}
 	return result, err
 }
-func (d *Migrator) getLatestMigration() (*Migration, error) {
-	result := &Migration{}
+func (d *Migrator) getLatestMigration() (*types.Migration, error) {
+	result := &types.Migration{}
 	err := d.db.Get(&result, "SELECT * FROM `"+d.databaseVersionTable+"` ORDER BY `applied_at` DESC")
 	if err != nil && err == sql.ErrNoRows {
 		return nil, nil
 	}
 	return result, err
 }
-func (d *Migrator) applyMigration(migration *Migration, down bool) error {
+func (d *Migrator) applyMigration(migration *types.Migration, down bool) error {
 	var query string
 	if down {
 		query = migration.DownScript
@@ -78,11 +80,11 @@ func (d *Migrator) applyMigration(migration *Migration, down bool) error {
 	}
 	return nil
 }
-func (d *Migrator) deleteMigration(m *Migration) error {
+func (d *Migrator) deleteMigration(m *types.Migration) error {
 	_, err := d.db.Exec("DELETE FROM `"+d.databaseVersionTable+"` WHERE `num`=?", m.Number)
 	return err
 }
-func (d *Migrator) addMigration(m *Migration) error {
+func (d *Migrator) addMigration(m *types.Migration) error {
 	now := time.Now()
 	m.AppliedAt = &now
 	_, err := d.db.NamedExec("INSERT INTO `"+d.databaseVersionTable+"` (`num`, `name`, `up_script`, `down_script`,`applied_at`) VALUES (:num, :name, :up_script, :down_script, :applied_at);", m)
@@ -132,7 +134,7 @@ func (d *Migrator) dbVersionTableExists() (bool, error) {
 	return true, nil
 }
 
-func NewMigrator(dbVersionTable, dsn string, migrations []Migration) (*Migrator, error) {
+func newMigrator(dbVersionTable, driver, dsn string, migrations []types.Migration) (*Migrator, error) {
 	d, err := mysql.ParseDSN(dsn)
 	if err != nil {
 		return nil, errors.New("bad dsn: " + err.Error())
@@ -140,7 +142,7 @@ func NewMigrator(dbVersionTable, dsn string, migrations []Migration) (*Migrator,
 	d.MultiStatements = true
 	d.ParseTime = true
 	dsn = d.FormatDSN()
-	db, err := sqlx.Open("mysql", dsn)
+	db, err := sqlx.Open(driver, dsn)
 	if err != nil {
 		return nil, errors.New("can't connect to database: " + err.Error())
 	}
@@ -149,6 +151,7 @@ func NewMigrator(dbVersionTable, dsn string, migrations []Migration) (*Migrator,
 		return nil, errors.New("can't connect to database: " + err.Error())
 	}
 	result := &Migrator{
+		driver:               driver,
 		db:                   db,
 		dsn:                  dsn,
 		databaseVersionTable: dbVersionTable,

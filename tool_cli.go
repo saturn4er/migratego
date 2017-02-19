@@ -1,4 +1,4 @@
-package migrates
+package migratego
 
 import (
 	"errors"
@@ -8,12 +8,13 @@ import (
 	"strconv"
 
 	"github.com/olekukonko/tablewriter"
+	"github.com/saturn4er/migratego/types"
 	"github.com/urfave/cli"
 )
 
-func RunToolCli(m *MigrateApplication, args []string) error {
+func RunToolCli(m *migrateApplication, args []string) error {
 	tool := cli.NewApp()
-	mg, err := NewMigrator(m.dbVersionTable, m.dsn, m.migrations)
+	mg, err := newMigrator(m.dbVersionTable, m.driver, m.dsn, m.migrations)
 	if err != nil {
 		return err
 	}
@@ -82,7 +83,7 @@ func RunToolCli(m *MigrateApplication, args []string) error {
 					}
 					fmt.Println("Backup created at ", backupFilePath)
 				}
-				sort.Sort(byNumber(m.migrations))
+				sort.Sort(types.ByNumber(m.migrations))
 				applied, err := mg.getAppliedMigrations()
 				if err != nil {
 					return err
@@ -142,7 +143,7 @@ func RunToolCli(m *MigrateApplication, args []string) error {
 	tool.Run(args)
 	return nil
 }
-func ShowMigrationsToMigrate(toDowngrade, toUpgrade []Migration, wrapCode bool) {
+func ShowMigrationsToMigrate(toDowngrade, toUpgrade []types.Migration, wrapCode bool) {
 	var tableData [][]string
 	for _, apl := range toDowngrade {
 		applied := ""
@@ -170,8 +171,8 @@ func ShowMigrationsToMigrate(toDowngrade, toUpgrade []Migration, wrapCode bool) 
 	table.AppendBulk(tableData)
 	table.Render()
 }
-func ShowMigrations(migrations []Migration, showApplied bool) error {
-	sort.Sort(byNumber(migrations))
+func ShowMigrations(migrations []types.Migration, showApplied bool) error {
+	sort.Sort(types.ByNumber(migrations))
 	if len(migrations) == 0 {
 		fmt.Println("There's no migrations yet")
 	}
@@ -202,7 +203,7 @@ func ShowMigrations(migrations []Migration, showApplied bool) error {
 }
 
 // mergeMigrationsAppliedAt set applied at in
-func mergeMigrationsAppliedAt(to []Migration, from []Migration) []Migration {
+func mergeMigrationsAppliedAt(to []types.Migration, from []types.Migration) []types.Migration {
 	for i, mTo := range to {
 		for _, mFrom := range from {
 			if mTo.Compare(&mFrom) {
@@ -215,7 +216,7 @@ func mergeMigrationsAppliedAt(to []Migration, from []Migration) []Migration {
 }
 
 // findWayBetweenMigrations find path between two migrations list.
-func findWayBetweenMigrations(applied, actual []Migration) (toDowngrade []Migration, toUpgrade []Migration) {
+func findWayBetweenMigrations(applied, actual []types.Migration) (toDowngrade []types.Migration, toUpgrade []types.Migration) {
 	var sameI = -1
 	for i, a := range applied {
 		if len(actual)-1 < i || !a.Compare(&actual[i]) {

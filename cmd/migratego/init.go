@@ -34,6 +34,11 @@ func init() {
 				Usage: "Table name, where migratego will store all info",
 				Value: "",
 			},
+			cli.StringFlag{
+				Name:  "driver,dr",
+				Usage: "Database driver",
+				Value: "mysql",
+			},
 		},
 		Action: func(c *cli.Context) error {
 			dir := c.String("dir")
@@ -46,7 +51,7 @@ func init() {
 				fmt.Println("Can't create migrations directory:", err)
 				return nil
 			}
-			err = CreateDefaultMigrationsFiles(dir, c.String("dsn"), c.String("table"))
+			err = CreateDefaultMigrationsFiles(dir, c.String("driver"), c.String("dsn"), c.String("table"))
 			if err != nil {
 				fmt.Println("Can't create migrations files:", err)
 				return nil
@@ -67,37 +72,20 @@ func CreateMigrationsDirectory(dir string) error {
 			return errors.New("can't check if migrations directory is empty:" + err.Error())
 		}
 		if !empty {
-			return errors.New("migrations directory is not empty")
+			return errors.New(dir + " directory already exists and is not empty")
 		}
 	} else {
 		err = os.MkdirAll(dir, 0764)
 		if err != nil {
 			return errors.New("can't create migrations directory: " + err.Error())
 		}
-		fmt.Println("Created migrations directory: " + dir)
+		fmt.Println("Created " + dir)
 	}
 
 	return nil
 }
 
-const mainFileTpl = `package main
-
-import (
-	"os"
-
-	"github.com/saturn4er/migratego"
-)
-
-var app = migrates.NewApp("{{.dsn}}")
-
-func main() {
-	{{ if .table }}app.SetSchemaVersionTable("{{.table}}") {{ end }}
-	app.Run(os.Args)
-}
-
-`
-
-func CreateDefaultMigrationsFiles(dir, dsn, table string) error {
+func CreateDefaultMigrationsFiles(dir, driver, dsn, table string) error {
 	mainTemplate := template.New("")
 	_, err := mainTemplate.Parse(mainFileTpl)
 	if err != nil {
@@ -109,11 +97,13 @@ func CreateDefaultMigrationsFiles(dir, dsn, table string) error {
 		return errors.New("can't write to " + mainFilePath + ": " + err.Error())
 	}
 	err = mainTemplate.Execute(mainFile, map[string]string{
-		"dsn":   dsn,
-		"table": table,
+		"dsn":    dsn,
+		"table":  table,
+		"driver": driver,
 	})
 	if err != nil {
 		return errors.New("can't write to " + mainFilePath + ": " + err.Error())
 	}
+	fmt.Println("Created " + mainFilePath)
 	return nil
 }

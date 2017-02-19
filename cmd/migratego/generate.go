@@ -59,27 +59,6 @@ func init() {
 	})
 }
 
-const defaultMigrationFile = `package main
-
-import (
-	"github.com/saturn4er/migratego"
-	{{ range $e := .imports }}
-	"{{$e}}"
-	{{ end }}
-)
-
-func init() {
-	app.AddMigration(1, "{{.name}}",
-		func(s *migrates.Scope) {
-			{{.upBody}}
-		},
-		func(s *migrates.Scope) {
-			{{.downBody}}
-		},
-	)
-}
-`
-
 func generateMigration(version int, name string, dir string, args []string) error {
 	migrationFilePath := filepath.Join(dir, fmt.Sprintf("%03d_%s.go", version, name))
 
@@ -95,7 +74,7 @@ func generateMigration(version int, name string, dir string, args []string) erro
 		return errors.New("Can't create migration file: " + err.Error())
 	}
 
-	mainTemplate, err := template.New("").Parse(defaultMigrationFile)
+	mainTemplate, err := template.New("").Parse(migrationFileTemplate)
 	if err != nil {
 		panic(err)
 	}

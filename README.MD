@@ -1,7 +1,9 @@
 # MIGRATEGO
+Library to write and build migrations using Golang.
 
 ## Dependencies
-- mysqldump
+- Go 1.7+
+- mysqldump ( to dump mysql database before applying migrations
 
 ## Installation
 
@@ -26,23 +28,34 @@
 
 ### Create table
 ```go
-app.AddMigration(2, "initApp",
-    func(s *migrates.Scope) {
-        s.CreateTable("user", func(t migrates.CreateTable) {
-            id := t.Column("id", "int").Primary()
-            name := t.Column("name", "varchar(255)").NotNull()
-            password := t.Column("password", "varchar(255)").NotNull()
-        })
-    },
-    func(s *migrates.Scope) {
-        s.DropTable("user").IfExists()
-    },
+package main
+
+import (
+	"github.com/saturn4er/migratego"
+	"github.com/saturn4er/migratego/types"
 )
+
+
+func init() {
+	app.AddMigration(2, "initApp", initAppUp, initAppDown)
+}
+func initAppUp(s migratego.QueryBuilder) {
+	s.CreateTable("user", func(t types.CreateTableGenerator) {
+		t.Column("id", "int").Primary()
+		t.Column("name", "varchar(255)").NotNull()
+		t.Column("password", "varchar(255)").NotNull()
+
+	})
+}
+func initAppDown(s migratego.QueryBuilder) {
+	s.DropTable("user").IfExists()
+}
 ```
 
 ## TODO
 
-- AlterTable generator
+- Change table generator
 - Add Postgres
-
-
+- Foreign Key
+- Revertable migrations
+- Tool to Create initial migration by existing tables
