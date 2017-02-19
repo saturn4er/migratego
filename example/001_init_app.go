@@ -7,7 +7,7 @@ import (
 
 
 func init() {
-	app.AddMigration(2, "initApp", initAppUp, initAppDown)
+	app.AddMigration(1, "initApp", initAppUp, initAppDown)
 }
 func initAppUp(s migratego.QueryBuilder) {
 	s.CreateTable("user", func(t types.CreateTableGenerator) {

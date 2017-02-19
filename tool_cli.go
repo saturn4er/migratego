@@ -3,18 +3,15 @@ package migratego
 import (
 	"errors"
 	"fmt"
-	"os"
 	"sort"
-	"strconv"
 
-	"github.com/olekukonko/tablewriter"
 	"github.com/saturn4er/migratego/types"
 	"github.com/urfave/cli"
 )
 
 func RunToolCli(m *migrateApplication, args []string) error {
 	tool := cli.NewApp()
-	
+	tool.HelpName = "migratego"
 	client, err := m.getDriverClient()
 	if err != nil {
 		return err
@@ -39,7 +36,7 @@ func RunToolCli(m *migrateApplication, args []string) error {
 					fmt.Println("There's no migrations applied to database. Look's like it's empty")
 					return nil
 				}
-				ShowMigrations(applied, true)
+				types.ShowMigrations(applied, c.Bool("nwrap"))
 				return nil
 			},
 		},
@@ -47,13 +44,20 @@ func RunToolCli(m *migrateApplication, args []string) error {
 			Name:    "list",
 			Aliases: []string{"l"},
 			Usage:   "Migrations list",
+			Flags: []cli.Flag{
+				cli.BoolFlag{
+					Name:  "nwrap,nw",
+					Usage: "Do not wrap the code",
+				},
+			},
+
 			Action: func(c *cli.Context) error {
 				applied, err := client.GetAppliedMigrations()
 				if err != nil {
 					return err
 				}
 				m := types.MergeMigrationsAppliedAt(m.migrations, applied)
-				ShowMigrations(m, true)
+				types.ShowMigrations(m,  c.Bool("nwrap"))
 				return nil
 			},
 		},
@@ -67,7 +71,7 @@ func RunToolCli(m *migrateApplication, args []string) error {
 					Usage: "Do not ask for confirmations",
 				},
 				cli.BoolFlag{
-					Name:  "mwrap,nw",
+					Name:  "nwrap,nw",
 					Usage: "Do not wrap the code",
 				},
 				cli.StringFlag{
@@ -96,7 +100,7 @@ func RunToolCli(m *migrateApplication, args []string) error {
 					return nil
 				}
 				fmt.Println("Migrations, that will be applied")
-				ShowMigrationsToMigrate(toDowngrade, toUpgrade, c.Bool("mwrap"))
+				types.ShowMigrationsToMigrate(toDowngrade, toUpgrade, c.Bool("nwrap"))
 
 				if !c.Bool("y") {
 					ok, err := askForConfirmation("Apply migrations?")
@@ -142,63 +146,5 @@ func RunToolCli(m *migrateApplication, args []string) error {
 	}
 
 	tool.Run(args)
-	return nil
-}
-func ShowMigrationsToMigrate(toDowngrade, toUpgrade []types.Migration, wrapCode bool) {
-	var tableData [][]string
-	for _, apl := range toDowngrade {
-		applied := ""
-		if apl.AppliedAt != nil {
-			applied = apl.AppliedAt.Format("02-01-2016 15:04:05")
-		}
-		code := apl.DownScript
-		if len(code) > 47 && !wrapCode {
-			code = code[:47] + "..."
-		}
-		tableData = append(tableData, []string{strconv.Itoa(apl.Number), apl.Name, "Down", code, applied})
-	}
-	for _, apl := range toUpgrade {
-		code := apl.UpScript
-		if len(code) > 47 && !wrapCode {
-			code = code[:47] + "..."
-		}
-		tableData = append(tableData, []string{strconv.Itoa(apl.Number), apl.Name, "Up", code, ""})
-	}
-	table := tablewriter.NewWriter(os.Stdout)
-	table.SetHeader([]string{"#", "Name", "Oper.", "Code", "Applied at"})
-	table.SetColWidth(50)
-	table.SetAlignment(tablewriter.ALIGN_CENTER)
-	table.SetRowLine(true)
-	table.AppendBulk(tableData)
-	table.Render()
-}
-func ShowMigrations(migrations []types.Migration, showApplied bool) error {
-	sort.Sort(types.ByNumber(migrations))
-	if len(migrations) == 0 {
-		fmt.Println("There's no migrations yet")
-	}
-	table := tablewriter.NewWriter(os.Stdout)
-	var header = []string{"#", "Name", "Up", "Down"}
-	if showApplied {
-		header = append(header, "Applied at")
-	}
-	table.SetHeader(header)
-	table.SetAlignment(tablewriter.ALIGN_CENTER)
-	table.SetRowLine(true)
-	tableData := make([][]string, len(migrations))
-	i := 0
-	for _, mi := range migrations {
-		tableData[i] = []string{strconv.Itoa(mi.Number), mi.Name, mi.UpScript, mi.DownScript}
-		if showApplied {
-			var applied = ""
-			if mi.AppliedAt != nil {
-				applied = mi.AppliedAt.Format("02-01-2016 15:04:05")
-			}
-			tableData[i] = append(tableData[i], applied)
-		}
-		i++
-	}
-	table.AppendBulk(tableData)
-	table.Render()
 	return nil
 }
