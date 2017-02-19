@@ -7,7 +7,6 @@ import (
 	"reflect"
 	"strings"
 
-	"github.com/saturn4er/migratego/databases/mysql"
 	"github.com/saturn4er/migratego/types"
 )
 
@@ -65,19 +64,8 @@ func (m *migrateApplication) getQueryBuilderScripts(p queryBuilderFunc) []string
 	p(qb)
 	return qb.GetSqls()
 }
-func getDriverQueryBuilder(driver string) QueryBuilder {
-	switch driver {
-	case "mysql":
-		return new(mysql.MysqlQueryBuilder)
-	}
-	panic("Unknown driver:" + driver)
-}
-func getDriverClient(driver, dsn, transactionsTableName string) types.Client {
-	switch driver {
-	case "mysql":
-		return mysql.NewClient(dsn, transactionsTableName)
-	}
-	panic("Unknown driver:" + driver)
+func (m *migrateApplication) getDriverClient() (types.DBClient, error) {
+	return getDriverClient(m.driver, m.dsn, m.dbVersionTable)
 }
 func NewApp(driver, dsn string) MigrateApplication {
 	shouldCheckDriver(driver)

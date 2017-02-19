@@ -1,4 +1,5 @@
 package types
+
 type Order string
 type Querier interface {
 	Sql() string
@@ -11,7 +12,7 @@ type DropTablesGenerator interface {
 type CreateTableGenerator interface {
 	Column(name string, Type string) ColumnGenerator
 	Index(name string, unique bool) IndexGenerator
-	NewIndexColumn(ColumnGenerator, ...interface {}) IndexColumnGenerator
+	NewIndexColumn(ColumnGenerator, ...interface{}) IndexColumnGenerator
 	Sql() string
 }
 type ColumnGenerator interface {
@@ -29,6 +30,11 @@ type IndexColumnGenerator interface {
 	Sql() string
 }
 
-type Client interface{
+type DBClient interface {
 	PrepareTransactionsTable() error
+	Backup(path string) (string, error)
+	InsertMigration(migration *Migration) error
+	RemoveMigration(migration *Migration) error
+	ApplyMigration(migration *Migration, down bool) error
+	GetAppliedMigrations() ([]Migration, error)
 }

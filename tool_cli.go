@@ -14,11 +14,12 @@ import (
 
 func RunToolCli(m *migrateApplication, args []string) error {
 	tool := cli.NewApp()
-	mg, err := newMigrator(m.dbVersionTable, m.driver, m.dsn, m.migrations)
+	
+	client, err := m.getDriverClient()
 	if err != nil {
 		return err
 	}
-	err = mg.prepareDBVersionTable()
+	err = client.PrepareTransactionsTable()
 	if err != nil {
 		return err
 	}
@@ -30,7 +31,7 @@ func RunToolCli(m *migrateApplication, args []string) error {
 			Aliases: []string{"c"},
 			Usage:   "Current version of database",
 			Action: func(c *cli.Context) error {
-				applied, err := mg.getAppliedMigrations()
+				applied, err := client.GetAppliedMigrations()
 				if err != nil {
 					return err
 				}
@@ -47,7 +48,7 @@ func RunToolCli(m *migrateApplication, args []string) error {
 			Aliases: []string{"l"},
 			Usage:   "Migrations list",
 			Action: func(c *cli.Context) error {
-				applied, err := mg.getAppliedMigrations()
+				applied, err := client.GetAppliedMigrations()
 				if err != nil {
 					return err
 				}
@@ -77,14 +78,14 @@ func RunToolCli(m *migrateApplication, args []string) error {
 			Action: func(c *cli.Context) error {
 				backupPath := c.String("backup")
 				if backupPath != "" {
-					backupFilePath, err := mg.backupDatabase(backupPath)
+					backupFilePath, err := client.Backup(backupPath)
 					if err != nil {
 						return err
 					}
 					fmt.Println("Backup created at ", backupFilePath)
 				}
 				sort.Sort(types.ByNumber(m.migrations))
-				applied, err := mg.getAppliedMigrations()
+				applied, err := client.GetAppliedMigrations()
 				if err != nil {
 					return err
 				}
@@ -109,12 +110,12 @@ func RunToolCli(m *migrateApplication, args []string) error {
 				}
 				for _, d := range toDowngrade {
 					fmt.Printf("Downgrading migration #%15d %15s....    ", d.Number, d.Name)
-					err := mg.applyMigration(&d, true)
+					err := client.ApplyMigration(&d, true)
 					if err != nil {
 						fmt.Println(err)
 						return nil
 					}
-					err = mg.deleteMigration(&d)
+					err = client.RemoveMigration(&d)
 					if err != nil {
 						fmt.Println("Can't deletem migration from migrations table: ", err)
 						return nil
@@ -123,12 +124,12 @@ func RunToolCli(m *migrateApplication, args []string) error {
 				}
 				for _, d := range toUpgrade {
 					fmt.Printf("Applying migration    %15d %15s....    ", d.Number, d.Name)
-					err := mg.applyMigration(&d, false)
+					err := client.ApplyMigration(&d, false)
 					if err != nil {
 						fmt.Println(err)
 						return nil
 					}
-					err = mg.addMigration(&d)
+					err = client.RemoveMigration(&d)
 					if err != nil {
 						fmt.Println("Can't insert migration to migrations table: ", err)
 						return nil
