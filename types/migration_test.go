@@ -7,6 +7,7 @@ import (
 	"time"
 
 	. "github.com/smartystreets/goconvey/convey"
+	"strconv"
 )
 
 func TestMigration(t *testing.T) {
@@ -80,4 +81,22 @@ func TestMigration(t *testing.T) {
 		So(a[1].Name, ShouldEqual, "2")
 		So(a[2].Name, ShouldEqual, "3")
 	})
+	Convey("Should find way between migrations", t, func(){
+		m0 := migrationByNumber(0)
+		m1 := migrationByNumber(1)
+		m2 := migrationByNumber(0)
+		migrationsA := []Migration{*m0, *m1}
+		migrationsB := []Migration{*m0, *m2}
+		down, up := FindWayBetweenMigrations(migrationsA, migrationsB)
+		So(down, ShouldHaveLength, 1)
+		So(up, ShouldHaveLength, 1)
+		So(down[0].Compare(m1), ShouldBeTrue)
+		So(up[0].Compare(m2), ShouldBeTrue)
+	})
+}
+func migrationByNumber(i int) *Migration{
+	return &Migration{
+		Number: i,
+		Name: strconv.Itoa(i),
+	}
 }
