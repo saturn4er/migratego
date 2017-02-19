@@ -52,7 +52,7 @@ func RunToolCli(m *migrateApplication, args []string) error {
 				if err != nil {
 					return err
 				}
-				m := mergeMigrationsAppliedAt(m.migrations, applied)
+				m := types.MergeMigrationsAppliedAt(m.migrations, applied)
 				ShowMigrations(m, true)
 				return nil
 			},
@@ -90,7 +90,7 @@ func RunToolCli(m *migrateApplication, args []string) error {
 					return err
 				}
 
-				toDowngrade, toUpgrade := findWayBetweenMigrations(applied, m.migrations)
+				toDowngrade, toUpgrade := types.FindWayBetweenMigrations(applied, m.migrations)
 				if len(toDowngrade) == 0 && len(toUpgrade) == 0 {
 					fmt.Println("Your database is already up-to-date")
 					return nil
@@ -201,35 +201,4 @@ func ShowMigrations(migrations []types.Migration, showApplied bool) error {
 	table.AppendBulk(tableData)
 	table.Render()
 	return nil
-}
-
-// mergeMigrationsAppliedAt set applied at in
-func mergeMigrationsAppliedAt(to []types.Migration, from []types.Migration) []types.Migration {
-	for i, mTo := range to {
-		for _, mFrom := range from {
-			if mTo.Compare(&mFrom) {
-				to[i].AppliedAt = mFrom.AppliedAt
-				break
-			}
-		}
-	}
-	return to
-}
-
-// findWayBetweenMigrations find path between two migrations list.
-func findWayBetweenMigrations(applied, actual []types.Migration) (toDowngrade []types.Migration, toUpgrade []types.Migration) {
-	var sameI = -1
-	for i, a := range applied {
-		if len(actual)-1 < i || !a.Compare(&actual[i]) {
-			for j := len(applied) - 1; j >= i; j-- {
-				toDowngrade = append(toDowngrade, applied[j])
-			}
-			break
-		}
-		sameI = i
-	}
-	for i := sameI + 1; i < len(actual); i++ {
-		toUpgrade = append(toUpgrade, actual[i])
-	}
-	return
 }

@@ -39,3 +39,31 @@ func (s ByNumber) Less(i, j int) bool {
 func (s ByNumber) Swap(i, j int) {
 	s[i], s[j] = s[j], s[i]
 }
+func MergeMigrationsAppliedAt(to []Migration, from []Migration) []Migration {
+	for i, mTo := range to {
+		for _, mFrom := range from {
+			if mTo.Compare(&mFrom) {
+				to[i].AppliedAt = mFrom.AppliedAt
+				break
+			}
+		}
+	}
+	return to
+}
+// findWayBetweenMigrations find path between two migrations list.
+func FindWayBetweenMigrations(applied, actual []Migration) (toDowngrade []Migration, toUpgrade []Migration) {
+	var sameI = -1
+	for i, a := range applied {
+		if len(actual)-1 < i || !a.Compare(&actual[i]) {
+			for j := len(applied) - 1; j >= i; j-- {
+				toDowngrade = append(toDowngrade, applied[j])
+			}
+			break
+		}
+		sameI = i
+	}
+	for i := sameI + 1; i < len(actual); i++ {
+		toUpgrade = append(toUpgrade, actual[i])
+	}
+	return
+}

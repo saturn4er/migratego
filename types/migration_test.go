@@ -1,4 +1,4 @@
-package migratego
+package types
 
 import (
 	"testing"
@@ -33,16 +33,16 @@ func TestMigration(t *testing.T) {
 	Convey("Should test Migration.Compare", t, func() {
 		a := []Migration{
 			{
-				Number:     3,
-				Name:       "3",
+				Number: 3,
+				Name:   "3",
 			},
 			{
-				Number:     1,
-				Name:       "1",
+				Number: 1,
+				Name:   "1",
 			},
 			{
-				Number:     2,
-				Name:       "2",
+				Number: 2,
+				Name:   "2",
 			},
 		}
 		sort.Sort(byNumber(a))
