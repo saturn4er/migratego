@@ -1,5 +1,6 @@
 # MIGRATEGO
 [![Build Status](https://travis-ci.org/saturn4er/migratego.svg?branch=master)](https://travis-ci.org/saturn4er/migratego)
+
 Library to write and build migrations using Golang.
 
 ## Dependencies
