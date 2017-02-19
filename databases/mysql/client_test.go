@@ -34,7 +34,6 @@ func TestMysqlClient(t *testing.T) {
 			DownScript: NewDropTablesGenerator("test_table").Sql(),
 		}
 		Convey("Should apply migrations", func() {
-
 			err = c.ApplyMigration(testMigration, false)
 			So(err, ShouldBeNil)
 			err = c.ApplyMigration(testMigration, true)
