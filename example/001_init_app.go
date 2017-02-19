@@ -17,5 +17,5 @@ func initAppUp(s migratego.QueryBuilder) {
 	})
 }
 func initAppDown(s migratego.QueryBuilder) {
-	s.DropTable("user").IfExists()
+	s.DropTables("user").IfExists()
 }

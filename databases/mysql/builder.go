@@ -6,7 +6,7 @@ type MysqlQueryBuilder struct {
 	generators []types.Querier
 }
 
-func (m *MysqlQueryBuilder) DropTable(names ...string) types.DropTablesGenerator {
+func (m *MysqlQueryBuilder) DropTables(names ...string) types.DropTablesGenerator {
 	c := NewDropTablesGenerator(names...)
 	m.generators = append(m.generators, c)
 	return c

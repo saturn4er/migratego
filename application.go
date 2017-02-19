@@ -11,7 +11,7 @@ import (
 )
 
 type QueryBuilder interface {
-	DropTable(...string) types.DropTablesGenerator
+	DropTables(...string) types.DropTablesGenerator
 	CreateTable(string, func(types.CreateTableGenerator)) types.CreateTableGenerator
 	NewIndexColumn(column types.ColumnGenerator, params ...interface{}) types.IndexColumnGenerator
 	RawQuery(string)

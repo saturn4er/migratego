@@ -6,7 +6,6 @@ import (
 	"sort"
 	"strconv"
 	"time"
-
 	"github.com/olekukonko/tablewriter"
 )
 
@@ -81,7 +80,7 @@ func ShowMigrationsToMigrate(toDowngrade, toUpgrade []Migration, wrapCode bool) 
 	for _, apl := range toDowngrade {
 		applied := ""
 		if apl.AppliedAt != nil {
-			applied = apl.AppliedAt.Format("02-01-2016 15:04:05")
+			applied = apl.AppliedAt.Format("02.01.06 15:04:05")
 		}
 		code := apl.DownScript
 		if len(code) > 47 && !wrapCode {

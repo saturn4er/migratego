@@ -30,10 +30,16 @@ type IndexColumnGenerator interface {
 }
 
 type DBClient interface {
+	// PrepareTransactionsTable checks if table with migrations exists and creates it, if it doesn't
 	PrepareTransactionsTable() error
+	// Backup dumps database to some file in folder and returns path to it
 	Backup(path string) (string, error)
+	// InsertMigration adds migration to migrations table
 	InsertMigration(migration *Migration) error
+	// RemoveMigration removes migration from migrations table
 	RemoveMigration(migration *Migration) error
+	// ApplyMigration executes UpScript if down is false. Execute DownScript of down is true
 	ApplyMigration(migration *Migration, down bool) error
+	// GetAppliedMigrations returns list of migrations in migrations table
 	GetAppliedMigrations() ([]Migration, error)
 }

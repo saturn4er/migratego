@@ -26,7 +26,13 @@ func RunToolCli(m *migrateApplication, args []string) error {
 		{
 			Name:    "current",
 			Aliases: []string{"c"},
-			Usage:   "Current version of database",
+			Usage:   "Migrations, that was applied to database",
+			Flags: []cli.Flag{
+				cli.BoolFlag{
+					Name:  "nwrap,nw",
+					Usage: "Do not wrap the code",
+				},
+			},
 			Action: func(c *cli.Context) error {
 				applied, err := client.GetAppliedMigrations()
 				if err != nil {
@@ -43,7 +49,7 @@ func RunToolCli(m *migrateApplication, args []string) error {
 		{
 			Name:    "list",
 			Aliases: []string{"l"},
-			Usage:   "Migrations list",
+			Usage:   "All available migrations",
 			Flags: []cli.Flag{
 				cli.BoolFlag{
 					Name:  "nwrap,nw",
@@ -56,8 +62,8 @@ func RunToolCli(m *migrateApplication, args []string) error {
 				if err != nil {
 					return err
 				}
-				m := types.MergeMigrationsAppliedAt(m.migrations, applied)
-				types.ShowMigrations(m,  c.Bool("nwrap"))
+				types.MergeMigrationsAppliedAt(m.migrations, applied)
+				types.ShowMigrations(m.migrations,  c.Bool("nwrap"))
 				return nil
 			},
 		},
@@ -99,7 +105,7 @@ func RunToolCli(m *migrateApplication, args []string) error {
 					fmt.Println("Your database is already up-to-date")
 					return nil
 				}
-				fmt.Println("Migrations, that will be applied")
+				fmt.Println("Migrations, that will be applied:")
 				types.ShowMigrationsToMigrate(toDowngrade, toUpgrade, c.Bool("nwrap"))
 
 				if !c.Bool("y") {
@@ -133,7 +139,7 @@ func RunToolCli(m *migrateApplication, args []string) error {
 						fmt.Println(err)
 						return nil
 					}
-					err = client.RemoveMigration(&d)
+					err = client.InsertMigration(&d)
 					if err != nil {
 						fmt.Println("Can't insert migration to migrations table: ", err)
 						return nil
