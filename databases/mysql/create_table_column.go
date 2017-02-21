@@ -6,9 +6,9 @@ import (
 	"github.com/saturn4er/migratego/types"
 )
 
-type ColumnGenerators []ColumnGenerator
+type CreateTableColumns []CreateTableColumn
 
-func (c ColumnGenerators) String() string {
+func (c CreateTableColumns) String() string {
 	var result = make([]string, len(c))
 	for i, v := range c {
 		result[i] = "`" + strings.Replace(v.name, "`", "\\`", -1) + "`"
@@ -16,7 +16,7 @@ func (c ColumnGenerators) String() string {
 	return strings.Join(result, ",")
 }
 
-type ColumnGenerator struct {
+type CreateTableColumn struct {
 	table *createTableGenerator
 	name  string
 	fType string
@@ -30,32 +30,33 @@ type ColumnGenerator struct {
 	comment       string
 	defaultValue  string
 	charset       string
+	after         string
 }
 
-func (f *ColumnGenerator) GetName() string {
+func (f *CreateTableColumn) GetName() string {
 	return f.name
 }
 
 // AutoIncrement define column as AUTO_INCREMENT and new PRIMARY INDEX
-func (f *ColumnGenerator) AutoIncrement(primaryComment string) types.ColumnGenerator {
+func (f *CreateTableColumn) AutoIncrement(primaryComment... string) types.CreateTableColumnGenerator {
 	f.autoIncrement = true
-	f.Primary(primaryComment)
+	f.Primary(primaryComment...)
 	return f
 }
 
 // Index add index to table for this column
-func (f *ColumnGenerator) Index(name string, unique bool, order string, length int) types.IndexGenerator {
+func (f *CreateTableColumn) Index(name string, unique bool, order string, length int) types.IndexGenerator {
 	index := newIndexGenerator(name, unique)
 
 	index.Columns(&IndexColumnGenerator{
-		Column: f,
+		Column: f.name,
 		Order:  order,
 		Length: length,
 	})
 	f.table.indexes = append(f.table.indexes, index)
 	return index
 }
-func (f *ColumnGenerator) Primary(comment ...string) types.ColumnGenerator {
+func (f *CreateTableColumn) Primary(comment ...string) types.CreateTableColumnGenerator {
 	var c string
 	if len(comment) > 0 {
 		c = comment[0]
@@ -65,38 +66,38 @@ func (f *ColumnGenerator) Primary(comment ...string) types.ColumnGenerator {
 }
 
 // NotNull marks column as NOT NULL
-func (f *ColumnGenerator) NotNull() types.ColumnGenerator {
+func (f *CreateTableColumn) NotNull() types.CreateTableColumnGenerator {
 	f.notNull = true
 	return f
 }
 
 // Binary marks column as BINARY
-func (f *ColumnGenerator) Binary() types.ColumnGenerator {
+func (f *CreateTableColumn) Binary() types.CreateTableColumnGenerator {
 	f.binary = true
 	return f
 }
-func (f *ColumnGenerator) ZeroFill() types.ColumnGenerator {
+func (f *CreateTableColumn) ZeroFill() types.CreateTableColumnGenerator {
 	f.zeroFill = true
 	return f
 }
-func (f *ColumnGenerator) Unsigned() types.ColumnGenerator {
+func (f *CreateTableColumn) Unsigned() types.CreateTableColumnGenerator {
 	f.unsigned = true
 	return f
 }
-func (f *ColumnGenerator) Generated() types.ColumnGenerator {
+func (f *CreateTableColumn) Generated() types.CreateTableColumnGenerator {
 	f.generated = true
 	return f
 }
-func (f *ColumnGenerator) DefaultValue(v string) types.ColumnGenerator {
+func (f *CreateTableColumn) DefaultValue(v string) types.CreateTableColumnGenerator {
 	f.defaultValue = v
 	return f
 }
-func (f *ColumnGenerator) Comment(v string) types.ColumnGenerator {
+func (f *CreateTableColumn) Comment(v string) types.CreateTableColumnGenerator {
 	f.comment = v
 	return f
 }
 
-func (f *ColumnGenerator) Sql() string {
+func (f *CreateTableColumn) Sql() string {
 	sql := "`" + f.name + "` " + string(f.fType)
 	if f.unsigned {
 		sql += " UNSIGNED"

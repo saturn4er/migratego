@@ -7,20 +7,20 @@ import (
 )
 
 type IndexColumnGenerator struct {
-	Column types.ColumnGenerator
+	Column string
 	Order  string
 	Length int
 }
 
 func (i *IndexColumnGenerator) Sql() string {
-	var sql = wrapName(i.Column.GetName())
+	var sql = wrapName(i.Column)
 	if i.Length > 0 {
 		sql += "(" + strconv.FormatInt(int64(i.Length), 10) + ")"
 	}
 	return sql + " " + string(i.Order)
 }
 
-func NewIndexColumnGenerator(column types.ColumnGenerator, Order string, Length int) types.IndexColumnGenerator {
+func NewIndexColumnGenerator(column string, Order string, Length int) types.IndexColumnGenerator {
 	return &IndexColumnGenerator{
 		Column: column,
 		Order:  Order,

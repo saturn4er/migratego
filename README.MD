@@ -26,7 +26,7 @@ Library to write and build migrations using Golang.
 * Apply your first `initial_migration` to database with `./migrations m`
 
 
-## Writing migrations
+## Examples
 
 ### Create table
 ```go
@@ -53,6 +53,32 @@ func initAppDown(s migratego.QueryBuilder) {
 	s.DropTables("user").IfExists()
 }
 ```
+
+## Sql generators
+ * Drop tables
+ * Create Table
+   * Column
+     * Primary
+     * Not null
+     * Unsigned
+     * Binary
+     * Zero Fill
+     * Generated
+     * Default Value
+     * Comment
+     * Index
+     * Auto Increment
+   * Index
+   * Foreign key (TODO)
+ * Table
+   * Rename
+   * Delete
+   * Add column
+   * Add index
+   * Remove index
+   * Update column (TODO)
+ * Raw Query
+ 
 
 ## TODO
 

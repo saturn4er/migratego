@@ -24,18 +24,18 @@ func (m *MysqlQueryBuilder) RawQuery(q string) {
 // Usage NewIndexColumn(column, order[optional], length[optional])
 // orderType default value is ASC
 // length default value is int
-func (c *MysqlQueryBuilder) NewIndexColumn(column types.ColumnGenerator, params ...interface{}) types.IndexColumnGenerator {
+func (c *MysqlQueryBuilder) NewIndexColumn(column string, params ...interface{}) types.IndexColumnGenerator {
 	var length int
 	var order = "ASC"
 	var ok bool
 	if len(params) > 0 {
 		if order, ok = params[0].(string); !ok {
-			panic("first param should be of type `string`")
+			panic("second param should be of type `string`")
 		}
 	}
 	if len(params) > 1 {
-		if length, ok = params[0].(int); !ok {
-			panic("first param should be of type `int`")
+		if length, ok = params[1].(int); !ok {
+			panic("third param should be of type `int`")
 		}
 	}
 	return &IndexColumnGenerator{
@@ -43,6 +43,10 @@ func (c *MysqlQueryBuilder) NewIndexColumn(column types.ColumnGenerator, params 
 		Order:  order,
 		Length: length,
 	}
+}
+func (m *MysqlQueryBuilder) Table(name string, b func (t types.TableScope)) {
+	scope := &TableScope{name: name, builder: m}
+	b(scope)
 }
 func (m *MysqlQueryBuilder) Sqls() []string {
 	var result []string

@@ -15,7 +15,7 @@ type createTableGenerator struct {
 	engine        string
 	comment       string
 	charset       string
-	columns       []types.ColumnGenerator
+	columns       []types.CreateTableColumnGenerator
 	indexes       []types.IndexGenerator
 	primaryKey    *PrimaryKeyGenerator
 	uniqueIndexes map[string]string
@@ -56,7 +56,7 @@ func (c *createTableGenerator) CharSet(charset string) types.CreateTableGenerato
 	c.charset = charset
 	return c
 }
-func (c *createTableGenerator) Comment(comment string) types.CreateTableGenerator{
+func (c *createTableGenerator) Comment(comment string) types.CreateTableGenerator {
 	c.comment = comment
 	return c
 }
@@ -64,8 +64,8 @@ func (c *createTableGenerator) Engine(engine string) types.CreateTableGenerator 
 	c.engine = engine
 	return c
 }
-func (c *createTableGenerator) Column(name string, Type string) types.ColumnGenerator {
-	result := &ColumnGenerator{
+func (c *createTableGenerator) Column(name string, Type string) types.CreateTableColumnGenerator {
+	result := &CreateTableColumn{
 		table: c,
 		name:  name,
 		fType: Type,

@@ -13,10 +13,10 @@ import (
 type QueryBuilder interface {
 	DropTables(...string) types.DropTablesGenerator
 	CreateTable(string, func(types.CreateTableGenerator)) types.CreateTableGenerator
-	NewIndexColumn(column types.ColumnGenerator, params ...interface{}) types.IndexColumnGenerator
+	Table(string, func(generator types.TableScope))
+	NewIndexColumn(column string, params ...interface{}) types.IndexColumnGenerator
 	RawQuery(string)
 	Sqls() []string
-
 }
 type queryBuilderFunc func(QueryBuilder)
 

@@ -15,6 +15,9 @@ func initAppUp(s migratego.QueryBuilder) {
 		t.Column("name", "varchar(255)").NotNull()
 		t.Column("password", "varchar(255)").NotNull()
 	})
+	s.Table("user", func(scope types.TableScope) {
+		scope.RemoveColumn("1")
+	})
 }
 func initAppDown(s migratego.QueryBuilder) {
 	s.DropTables("user").IfExists()

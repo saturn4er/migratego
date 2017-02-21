@@ -10,15 +10,41 @@ type DropTablesGenerator interface {
 	Sql() string
 }
 type CreateTableGenerator interface {
-	Column(name string, Type string) ColumnGenerator
+	Column(name string, Type string) CreateTableColumnGenerator
 	Index(name string, unique bool) IndexGenerator
 	Sql() string
 }
-type ColumnGenerator interface {
+type CreateTableColumnGenerator interface {
 	GetName() string
-	NotNull() ColumnGenerator
-	Primary(comment ...string) ColumnGenerator
+	Primary(comment ...string) CreateTableColumnGenerator
+	NotNull() CreateTableColumnGenerator
+	Unsigned() CreateTableColumnGenerator
+	Binary() CreateTableColumnGenerator
+	ZeroFill() CreateTableColumnGenerator
+	Generated() CreateTableColumnGenerator
+	DefaultValue(v string) CreateTableColumnGenerator
+	Comment(c string) CreateTableColumnGenerator
 	Index(name string, unique bool, order string, length int) IndexGenerator
+	Sql() string
+}
+type UpdateTableGenerator interface {
+	Rename(name string)
+	Delete(name string)
+	AddColumn(name string, Type string) UpdateTableAddColumnGenerator
+	AddIndex(name string, unique bool) IndexGenerator
+	RemoveIndex(name string)
+	Sql() string
+}
+type UpdateTableAddColumnGenerator interface {
+	GetName() string
+	NotNull() UpdateTableAddColumnGenerator
+	Unsigned() UpdateTableAddColumnGenerator
+	Binary() UpdateTableAddColumnGenerator
+	ZeroFill() UpdateTableAddColumnGenerator
+	Generated() UpdateTableAddColumnGenerator
+	DefaultValue(v string) UpdateTableAddColumnGenerator
+	Comment(c string) UpdateTableAddColumnGenerator
+	After(column string) UpdateTableAddColumnGenerator
 	Sql() string
 }
 type IndexGenerator interface {
@@ -29,6 +55,14 @@ type IndexColumnGenerator interface {
 	Sql() string
 }
 
+type TableScope interface {
+	AddColumn(name, cType string) UpdateTableAddColumnGenerator
+	RemoveColumn(name string) TableScope
+	AddIndex(string, bool) IndexGenerator
+	RemoveIndex(name string) TableScope
+	Rename(name string) TableScope
+	Delete()
+}
 type DBClient interface {
 	// PrepareTransactionsTable checks if table with migrations exists and creates it, if it doesn't
 	PrepareTransactionsTable() error
