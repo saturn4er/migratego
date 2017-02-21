@@ -1,5 +1,5 @@
 [![Build Status](https://travis-ci.org/saturn4er/migratego.svg?branch=master)](https://travis-ci.org/saturn4er/migratego)
-[![Coverage Status](https://coveralls.io/repos/github/saturn4er/migratego/badge.svg?branch=tech%2Ftests)](https://coveralls.io/github/saturn4er/migratego?branch=tech%2Ftests)
+[![Coverage Status](https://coveralls.io/repos/github/saturn4er/migratego/badge.svg?branch=master)](https://coveralls.io/github/saturn4er/migratego?branch=master)
 # MIGRATEGO
 Library to write and build migrations using Golang.
 
@@ -81,9 +81,6 @@ func initAppDown(s migratego.QueryBuilder) {
  
 
 ## TODO
-
-- Change table generator
 - Add Postgres
 - Foreign Key
-- Revertable migrations
 - Tool to Create initial migration by existing tables
