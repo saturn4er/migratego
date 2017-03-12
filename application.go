@@ -6,18 +6,8 @@ import (
 	"os"
 	"reflect"
 	"strings"
-
-	"github.com/saturn4er/migratego/types"
 )
 
-type QueryBuilder interface {
-	DropTables(...string) types.DropTablesGenerator
-	CreateTable(string, func(types.CreateTableGenerator)) types.CreateTableGenerator
-	Table(string, func(generator types.TableScope))
-	NewIndexColumn(column string, params ...interface{}) types.IndexColumnGenerator
-	RawQuery(string)
-	Sqls() []string
-}
 type queryBuilderFunc func(QueryBuilder)
 
 type MigrateApplication interface {
@@ -30,7 +20,7 @@ type migrateApplication struct {
 	driver         string
 	dsn            string
 	dbVersionTable string
-	migrations     []types.Migration
+	migrations     []Migration
 	db             *sql.DB
 }
 
@@ -43,7 +33,7 @@ func (m *migrateApplication) AddMigration(number int, name string, up queryBuild
 	}
 	upScripts := m.getQueryBuilderScripts(up)
 	downScripts := m.getQueryBuilderScripts(down)
-	m.migrations = append(m.migrations, types.Migration{
+	m.migrations = append(m.migrations, Migration{
 		Name:       name,
 		Number:     number,
 		UpScript:   strings.Join(upScripts, ";"),
@@ -65,7 +55,7 @@ func (m *migrateApplication) getQueryBuilderScripts(p queryBuilderFunc) []string
 	p(qb)
 	return qb.Sqls()
 }
-func (m *migrateApplication) getDriverClient() (types.DBClient, error) {
+func (m *migrateApplication) getDriverClient() (DBClient, error) {
 	return getDriverClient(m.driver, m.dsn, m.dbVersionTable)
 }
 func NewApp(driver, dsn string) MigrateApplication {

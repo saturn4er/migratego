@@ -1,9 +1,9 @@
 package mysql
 
 import (
-"testing"
+	"testing"
 
-. "github.com/smartystreets/goconvey/convey"
+	. "github.com/smartystreets/goconvey/convey"
 )
 
 func TestPrimaryKeyGenerator(t *testing.T) {

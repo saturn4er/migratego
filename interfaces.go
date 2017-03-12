@@ -1,4 +1,13 @@
-package types
+package migratego
+
+type QueryBuilder interface {
+	DropTables(...string) DropTablesGenerator
+	CreateTable(string, func(CreateTableGenerator)) CreateTableGenerator
+	Table(string, func(generator TableScope))
+	NewIndexColumn(column string, params ...interface{}) IndexColumnGenerator
+	RawQuery(string)
+	Sqls() []string
+}
 
 type Order string
 type Querier interface {
@@ -12,6 +21,9 @@ type DropTablesGenerator interface {
 type CreateTableGenerator interface {
 	Column(name string, Type string) CreateTableColumnGenerator
 	Index(name string, unique bool) IndexGenerator
+	Engine(engine string) CreateTableGenerator
+	Charset(charset string) CreateTableGenerator
+	Comment(comment string) CreateTableGenerator
 	Sql() string
 }
 type CreateTableColumnGenerator interface {
@@ -24,7 +36,8 @@ type CreateTableColumnGenerator interface {
 	Generated() CreateTableColumnGenerator
 	DefaultValue(v string) CreateTableColumnGenerator
 	Comment(c string) CreateTableColumnGenerator
-	Index(name string, unique bool, order string, length int) IndexGenerator
+	AutoIncrement(primaryComment ...string) CreateTableColumnGenerator
+	Index(name string, unique bool, params ...interface{}) IndexGenerator
 	Sql() string
 }
 type UpdateTableGenerator interface {
@@ -48,6 +61,7 @@ type UpdateTableAddColumnGenerator interface {
 	Sql() string
 }
 type IndexGenerator interface {
+	Unique() IndexGenerator
 	Columns(...IndexColumnGenerator) IndexGenerator
 	Sql() string
 }

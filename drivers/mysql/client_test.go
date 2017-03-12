@@ -3,13 +3,13 @@ package mysql
 import (
 	"testing"
 
-	"github.com/saturn4er/migratego/types"
+	"github.com/saturn4er/migratego"
 	. "github.com/smartystreets/goconvey/convey"
 )
 
 func TestMysqlClient(t *testing.T) {
 	Convey("MysqlDBClient", t, func() {
-		d, err := NewClient("root@tcp(127.0.0.1:3306)/migratego_test", "schema_version")
+		d, err := NewClient("root:password@tcp(127.0.0.1:3307)/retargetapp_v3_dev", "schema_version")
 		So(err, ShouldBeNil)
 		So(d, ShouldNotBeNil)
 		c := d.(*MysqlClient)
@@ -25,10 +25,10 @@ func TestMysqlClient(t *testing.T) {
 			So(err, ShouldBeNil)
 			So(exists, ShouldBeTrue)
 		})
-		testMigration := &types.Migration{
+		testMigration := &migratego.Migration{
 			Name:   "test migration",
 			Number: 1,
-			UpScript: NewCreateTableGenerator("test_table", func(c types.CreateTableGenerator) {
+			UpScript: NewCreateTableGenerator("test_table", func(c migratego.CreateTableGenerator) {
 				c.Column("id", "int")
 			}).Sql(),
 			DownScript: NewDropTablesGenerator("test_table").Sql(),

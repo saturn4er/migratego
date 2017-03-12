@@ -1,4 +1,4 @@
-package types
+package migratego
 
 import (
 	"testing"
@@ -6,8 +6,9 @@ import (
 	"sort"
 	"time"
 
-	. "github.com/smartystreets/goconvey/convey"
 	"strconv"
+
+	. "github.com/smartystreets/goconvey/convey"
 )
 
 func TestMigration(t *testing.T) {
@@ -81,7 +82,7 @@ func TestMigration(t *testing.T) {
 		So(a[1].Name, ShouldEqual, "2")
 		So(a[2].Name, ShouldEqual, "3")
 	})
-	Convey("Should find way between migrations", t, func(){
+	Convey("Should find way between migrations", t, func() {
 		m0 := migrationByNumber(0)
 		m1 := migrationByNumber(1)
 		m2 := migrationByNumber(0)
@@ -94,9 +95,9 @@ func TestMigration(t *testing.T) {
 		So(up[0].Compare(m2), ShouldBeTrue)
 	})
 }
-func migrationByNumber(i int) *Migration{
+func migrationByNumber(i int) *Migration {
 	return &Migration{
 		Number: i,
-		Name: strconv.Itoa(i),
+		Name:   strconv.Itoa(i),
 	}
 }

@@ -3,7 +3,7 @@ package mysql
 import (
 	"strings"
 
-	"github.com/saturn4er/migratego/types"
+	"github.com/saturn4er/migratego"
 )
 
 type IndexType string
@@ -15,8 +15,8 @@ type createTableGenerator struct {
 	engine        string
 	comment       string
 	charset       string
-	columns       []types.CreateTableColumnGenerator
-	indexes       []types.IndexGenerator
+	columns       []migratego.CreateTableColumnGenerator
+	indexes       []migratego.IndexGenerator
 	primaryKey    *PrimaryKeyGenerator
 	uniqueIndexes map[string]string
 }
@@ -52,19 +52,19 @@ func (c *createTableGenerator) Sql() string {
 	}
 	return sql
 }
-func (c *createTableGenerator) CharSet(charset string) types.CreateTableGenerator {
+func (c *createTableGenerator) Charset(charset string) migratego.CreateTableGenerator {
 	c.charset = charset
 	return c
 }
-func (c *createTableGenerator) Comment(comment string) types.CreateTableGenerator {
+func (c *createTableGenerator) Comment(comment string) migratego.CreateTableGenerator {
 	c.comment = comment
 	return c
 }
-func (c *createTableGenerator) Engine(engine string) types.CreateTableGenerator {
+func (c *createTableGenerator) Engine(engine string) migratego.CreateTableGenerator {
 	c.engine = engine
 	return c
 }
-func (c *createTableGenerator) Column(name string, Type string) types.CreateTableColumnGenerator {
+func (c *createTableGenerator) Column(name string, Type string) migratego.CreateTableColumnGenerator {
 	result := &CreateTableColumn{
 		table: c,
 		name:  name,
@@ -73,12 +73,12 @@ func (c *createTableGenerator) Column(name string, Type string) types.CreateTabl
 	c.columns = append(c.columns, result)
 	return result
 }
-func (c *createTableGenerator) Index(name string, unique bool) types.IndexGenerator {
+func (c *createTableGenerator) Index(name string, unique bool) migratego.IndexGenerator {
 	index := newIndexGenerator(name, unique)
 	c.indexes = append(c.indexes, index)
 	return index
 }
-func NewCreateTableGenerator(name string, sc func(types.CreateTableGenerator)) types.CreateTableGenerator {
+func NewCreateTableGenerator(name string, sc func(migratego.CreateTableGenerator)) migratego.CreateTableGenerator {
 	result := &createTableGenerator{
 		name:          name,
 		uniqueIndexes: make(map[string]string),

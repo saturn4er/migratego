@@ -1,33 +1,43 @@
 package migratego
 
-import (
-	"github.com/saturn4er/migratego/databases/mysql"
-	"github.com/saturn4er/migratego/types"
-)
+type QueryBuilderConstructor func() QueryBuilder
+type DBClientConstructor func(dsn, transactionTableName string) (DBClient, error)
 
-func shouldCheckDriver(driver string){
-	if !checkDriver(driver){
-		panic("We doesn't support "+driver+" driver")
+type Driver struct {
+	QueryBuilderConstructor QueryBuilderConstructor
+	DBClientConstructor     DBClientConstructor
+}
+
+var drivers = make(map[string]Driver)
+
+func DefineDriver(name string, qbc QueryBuilderConstructor, dbc DBClientConstructor) {
+	if _, ok := drivers[name]; ok {
+		panic("Driver '" + name + "' already defined")
+	}
+	drivers[name] = Driver{qbc, dbc}
+}
+
+func shouldCheckDriver(driver string) {
+	if !checkDriver(driver) {
+		panic("We doesn't support " + driver + " driver")
 	}
 }
 func checkDriver(driver string) bool {
-	switch(driver){
-	case "mysql":
-		return true
-	}
-	return false
+	_, ok := drivers[driver]
+	return ok
 }
 func getDriverQueryBuilder(driver string) QueryBuilder {
-	switch driver {
-	case "mysql":
-		return new(mysql.MysqlQueryBuilder)
+	d, ok := drivers[driver]
+	if !ok {
+		panic("Unknown driver:" + driver)
 	}
-	panic("Unknown driver:" + driver)
+	return d.QueryBuilderConstructor()
+
 }
-func getDriverClient(driver, dsn, transactionsTableName string) (types.DBClient, error) {
-	switch driver {
-	case "mysql":
-		return mysql.NewClient(dsn, transactionsTableName)
+func getDriverClient(driver, dsn, transactionsTableName string) (DBClient, error) {
+	d, ok := drivers[driver]
+	if !ok {
+		panic("Unknown driver:" + driver)
 	}
-	panic("Unknown driver:" + driver)
+	return d.DBClientConstructor(dsn, transactionsTableName)
 }

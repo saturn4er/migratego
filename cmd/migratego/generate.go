@@ -113,7 +113,7 @@ func GetUpMigrationBodyByName(name string) (string, []string) {
 	return "", nil
 }
 
-// GetUpMigrationBodyByName TODO this command should return
+// GetUpMigrationBodyByName TODO
 func GetDownMigrationBodyByName(name string) (string, []string) {
 	return "", nil
 }

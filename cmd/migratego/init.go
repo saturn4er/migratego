@@ -51,7 +51,13 @@ func init() {
 				fmt.Println("Can't create migrations directory:", err)
 				return nil
 			}
-			err = CreateDefaultMigrationsFiles(dir, c.String("driver"), c.String("dsn"), c.String("table"))
+			driver := c.String("driver")
+			switch driver {
+			case "mysql":
+			default:
+				fmt.Println("Migratego doesn't supports '" + driver + "' driver")
+			}
+			err = CreateDefaultMigrationsFiles(dir, driver, c.String("dsn"), c.String("table"))
 			if err != nil {
 				fmt.Println("Can't create migrations files:", err)
 				return nil

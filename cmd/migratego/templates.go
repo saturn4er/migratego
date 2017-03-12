@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"github.com/saturn4er/migratego"
+	_ "github.com/saturn4er/migratego/drivers/{{.driver}}"
 )
 
 var app = migratego.NewApp("{{.driver}}", "{{.dsn}}")

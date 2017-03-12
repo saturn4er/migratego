@@ -1,6 +1,6 @@
 package mysql
 
-import "github.com/saturn4er/migratego/types"
+import "github.com/saturn4er/migratego"
 
 type TableScope struct {
 	name    string
@@ -9,7 +9,7 @@ type TableScope struct {
 type UpdateTableIndexes struct {
 }
 
-func (t *TableScope) AddColumn(name string, Type string) types.UpdateTableAddColumnGenerator {
+func (t *TableScope) AddColumn(name string, Type string) migratego.UpdateTableAddColumnGenerator {
 	if name == "" {
 		panic("Can't add column to table with empty name")
 	}
@@ -21,18 +21,18 @@ func (t *TableScope) AddColumn(name string, Type string) types.UpdateTableAddCol
 	t.builder.generators = append(t.builder.generators, cg)
 	return cg
 }
-func (t *TableScope ) RemoveColumn(name string) types.TableScope {
-	q := rawQuery("COLUMN "+wrapName(name))
+func (t *TableScope) RemoveColumn(name string) migratego.TableScope {
+	q := rawQuery("COLUMN " + wrapName(name))
 	g := AlterTableGenerator{
-		table: t.name,
+		table:     t.name,
 		operation: AlterTableDrop,
-		query: &q,
+		query:     &q,
 	}
 	t.builder.generators = append(t.builder.generators, &g)
 	return t
 }
 
-func (t *TableScope) Rename(newName string) types.TableScope {
+func (t *TableScope) Rename(newName string) migratego.TableScope {
 	if newName == "" {
 		panic("New name of table should not be empty")
 	}
@@ -40,23 +40,23 @@ func (t *TableScope) Rename(newName string) types.TableScope {
 	t.name = newName
 	return t
 }
-func (t *TableScope) AddIndex(name string, unique bool) types.IndexGenerator {
+func (t *TableScope) AddIndex(name string, unique bool) migratego.IndexGenerator {
 	index := newIndexGenerator(name, unique)
 
 	g := AlterTableGenerator{
-		table: t.name,
+		table:     t.name,
 		operation: AlterTableAdd,
-		query: index,
+		query:     index,
 	}
 	t.builder.generators = append(t.builder.generators, &g)
 	return index
 }
-func (t *TableScope ) RemoveIndex(name string) types.TableScope {
-	q := rawQuery("INDEX "+wrapName(name))
+func (t *TableScope) RemoveIndex(name string) migratego.TableScope {
+	q := rawQuery("INDEX " + wrapName(name))
 	g := AlterTableGenerator{
-		table: t.name,
+		table:     t.name,
 		operation: AlterTableAdd,
-		query: &q,
+		query:     &q,
 	}
 	t.builder.generators = append(t.builder.generators, &g)
 	return t

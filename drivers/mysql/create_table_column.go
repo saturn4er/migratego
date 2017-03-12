@@ -3,7 +3,7 @@ package mysql
 import (
 	"strings"
 
-	"github.com/saturn4er/migratego/types"
+	"github.com/saturn4er/migratego"
 )
 
 type CreateTableColumns []CreateTableColumn
@@ -38,15 +38,39 @@ func (f *CreateTableColumn) GetName() string {
 }
 
 // AutoIncrement define column as AUTO_INCREMENT and new PRIMARY INDEX
-func (f *CreateTableColumn) AutoIncrement(primaryComment... string) types.CreateTableColumnGenerator {
+func (f *CreateTableColumn) AutoIncrement(primaryComment ...string) migratego.CreateTableColumnGenerator {
 	f.autoIncrement = true
 	f.Primary(primaryComment...)
 	return f
 }
 
 // Index add index to table for this column
-func (f *CreateTableColumn) Index(name string, unique bool, order string, length int) types.IndexGenerator {
+// Usage: Index("index_name", true, "DESC", 10)
+// This will create unique index "index_name" and it will add this column to it
+func (f *CreateTableColumn) Index(name string, unique bool, params ...interface{}) migratego.IndexGenerator {
+	if name == "" {
+		name = "idx_" + f.name
+	}
 	index := newIndexGenerator(name, unique)
+	var order = "ASC"
+	var length = 0
+	if len(params) > 0 {
+		o, ok := params[0].(string)
+		if !ok {
+			panic("Third param should be string (Order)")
+		}
+		if o != "" {
+			order = o
+		}
+	}
+	if len(params) > 1 {
+		var ok bool
+		length, ok = params[0].(int)
+		if !ok {
+			panic("Fourth param should be int (Length)")
+		}
+
+	}
 
 	index.Columns(&IndexColumnGenerator{
 		Column: f.name,
@@ -56,7 +80,7 @@ func (f *CreateTableColumn) Index(name string, unique bool, order string, length
 	f.table.indexes = append(f.table.indexes, index)
 	return index
 }
-func (f *CreateTableColumn) Primary(comment ...string) types.CreateTableColumnGenerator {
+func (f *CreateTableColumn) Primary(comment ...string) migratego.CreateTableColumnGenerator {
 	var c string
 	if len(comment) > 0 {
 		c = comment[0]
@@ -66,33 +90,33 @@ func (f *CreateTableColumn) Primary(comment ...string) types.CreateTableColumnGe
 }
 
 // NotNull marks column as NOT NULL
-func (f *CreateTableColumn) NotNull() types.CreateTableColumnGenerator {
+func (f *CreateTableColumn) NotNull() migratego.CreateTableColumnGenerator {
 	f.notNull = true
 	return f
 }
 
 // Binary marks column as BINARY
-func (f *CreateTableColumn) Binary() types.CreateTableColumnGenerator {
+func (f *CreateTableColumn) Binary() migratego.CreateTableColumnGenerator {
 	f.binary = true
 	return f
 }
-func (f *CreateTableColumn) ZeroFill() types.CreateTableColumnGenerator {
+func (f *CreateTableColumn) ZeroFill() migratego.CreateTableColumnGenerator {
 	f.zeroFill = true
 	return f
 }
-func (f *CreateTableColumn) Unsigned() types.CreateTableColumnGenerator {
+func (f *CreateTableColumn) Unsigned() migratego.CreateTableColumnGenerator {
 	f.unsigned = true
 	return f
 }
-func (f *CreateTableColumn) Generated() types.CreateTableColumnGenerator {
+func (f *CreateTableColumn) Generated() migratego.CreateTableColumnGenerator {
 	f.generated = true
 	return f
 }
-func (f *CreateTableColumn) DefaultValue(v string) types.CreateTableColumnGenerator {
+func (f *CreateTableColumn) DefaultValue(v string) migratego.CreateTableColumnGenerator {
 	f.defaultValue = v
 	return f
 }
-func (f *CreateTableColumn) Comment(v string) types.CreateTableColumnGenerator {
+func (f *CreateTableColumn) Comment(v string) migratego.CreateTableColumnGenerator {
 	f.comment = v
 	return f
 }
@@ -126,7 +150,7 @@ func (f *CreateTableColumn) Sql() string {
 	if f.charset != "" {
 		sql += "CHARACTER SET '" + string(f.charset) + "' NULL"
 	}
-	if f.defaultValue != "" {
+	if f.comment != "" {
 		sql += " COMMENT '" + strings.Replace(f.comment, "'", "\\'", -1) + "'"
 	}
 	return sql

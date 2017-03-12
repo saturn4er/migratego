@@ -1,4 +1,4 @@
-package types
+package migratego
 
 import (
 	"fmt"
@@ -6,6 +6,7 @@ import (
 	"sort"
 	"strconv"
 	"time"
+
 	"github.com/olekukonko/tablewriter"
 )
 
@@ -120,7 +121,7 @@ func ShowMigrations(migrations []Migration, wrap bool) error {
 		if mi.AppliedAt != nil {
 			applied = mi.AppliedAt.Format("02-01-2016 15:04:05")
 		}
-		tableData=append(tableData,[]string{strconv.Itoa(mi.Number), mi.Name, wrapCode(mi.UpScript, wrap), wrapCode(mi.DownScript, wrap), applied})
+		tableData = append(tableData, []string{strconv.Itoa(mi.Number), mi.Name, wrapCode(mi.UpScript, wrap), wrapCode(mi.DownScript, wrap), applied})
 	}
 	table.AppendBulk(tableData)
 	table.Render()

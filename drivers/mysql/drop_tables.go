@@ -2,7 +2,8 @@ package mysql
 
 import (
 	"strings"
-	"github.com/saturn4er/migratego/types"
+
+	"github.com/saturn4er/migratego"
 )
 
 type dropTablesGenerator struct {
@@ -10,11 +11,11 @@ type dropTablesGenerator struct {
 	ifExists bool
 }
 
-func (d *dropTablesGenerator) Table(tableName string) types.DropTablesGenerator {
+func (d *dropTablesGenerator) Table(tableName string) migratego.DropTablesGenerator {
 	d.tables = append(d.tables, tableName)
 	return d
 }
-func (d *dropTablesGenerator) IfExists() types.DropTablesGenerator  {
+func (d *dropTablesGenerator) IfExists() migratego.DropTablesGenerator {
 	d.ifExists = true
 	return d
 }
@@ -34,7 +35,7 @@ func (d *dropTablesGenerator) Sql() string {
 	return sql
 }
 
-func NewDropTablesGenerator(tableNames ...string) types.DropTablesGenerator {
+func NewDropTablesGenerator(tableNames ...string) migratego.DropTablesGenerator {
 	return &dropTablesGenerator{
 		tables: tableNames,
 	}

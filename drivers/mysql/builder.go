@@ -1,17 +1,17 @@
 package mysql
 
-import "github.com/saturn4er/migratego/types"
+import "github.com/saturn4er/migratego"
 
 type MysqlQueryBuilder struct {
-	generators []types.Querier
+	generators []migratego.Querier
 }
 
-func (m *MysqlQueryBuilder) DropTables(names ...string) types.DropTablesGenerator {
+func (m *MysqlQueryBuilder) DropTables(names ...string) migratego.DropTablesGenerator {
 	c := NewDropTablesGenerator(names...)
 	m.generators = append(m.generators, c)
 	return c
 }
-func (m *MysqlQueryBuilder) CreateTable(name string, g func(generator types.CreateTableGenerator)) types.CreateTableGenerator {
+func (m *MysqlQueryBuilder) CreateTable(name string, g func(generator migratego.CreateTableGenerator)) migratego.CreateTableGenerator {
 	c := NewCreateTableGenerator(name, g)
 	m.generators = append(m.generators, c)
 	return c
@@ -20,11 +20,12 @@ func (m *MysqlQueryBuilder) RawQuery(q string) {
 	c := rawQuery(q)
 	m.generators = append(m.generators, &c)
 }
+
 // NewIndexColumn creates new IndexColumnGenerator
 // Usage NewIndexColumn(column, order[optional], length[optional])
 // orderType default value is ASC
 // length default value is int
-func (c *MysqlQueryBuilder) NewIndexColumn(column string, params ...interface{}) types.IndexColumnGenerator {
+func (c *MysqlQueryBuilder) NewIndexColumn(column string, params ...interface{}) migratego.IndexColumnGenerator {
 	var length int
 	var order = "ASC"
 	var ok bool
@@ -44,7 +45,7 @@ func (c *MysqlQueryBuilder) NewIndexColumn(column string, params ...interface{})
 		Length: length,
 	}
 }
-func (m *MysqlQueryBuilder) Table(name string, b func (t types.TableScope)) {
+func (m *MysqlQueryBuilder) Table(name string, b func(t migratego.TableScope)) {
 	scope := &TableScope{name: name, builder: m}
 	b(scope)
 }

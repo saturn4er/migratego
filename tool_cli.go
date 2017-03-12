@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"sort"
 
-	"github.com/saturn4er/migratego/types"
 	"github.com/urfave/cli"
 )
 
@@ -42,7 +41,7 @@ func RunToolCli(m *migrateApplication, args []string) error {
 					fmt.Println("There's no migrations applied to database. Look's like it's empty")
 					return nil
 				}
-				types.ShowMigrations(applied, c.Bool("nwrap"))
+				ShowMigrations(applied, c.Bool("nwrap"))
 				return nil
 			},
 		},
@@ -62,8 +61,8 @@ func RunToolCli(m *migrateApplication, args []string) error {
 				if err != nil {
 					return err
 				}
-				types.MergeMigrationsAppliedAt(m.migrations, applied)
-				types.ShowMigrations(m.migrations,  c.Bool("nwrap"))
+				MergeMigrationsAppliedAt(m.migrations, applied)
+				ShowMigrations(m.migrations, c.Bool("nwrap"))
 				return nil
 			},
 		},
@@ -94,19 +93,19 @@ func RunToolCli(m *migrateApplication, args []string) error {
 					}
 					fmt.Println("Backup created at ", backupFilePath)
 				}
-				sort.Sort(types.ByNumber(m.migrations))
+				sort.Sort(ByNumber(m.migrations))
 				applied, err := client.GetAppliedMigrations()
 				if err != nil {
 					return err
 				}
 
-				toDowngrade, toUpgrade := types.FindWayBetweenMigrations(applied, m.migrations)
+				toDowngrade, toUpgrade := FindWayBetweenMigrations(applied, m.migrations)
 				if len(toDowngrade) == 0 && len(toUpgrade) == 0 {
 					fmt.Println("Your database is already up-to-date")
 					return nil
 				}
 				fmt.Println("Migrations, that will be applied:")
-				types.ShowMigrationsToMigrate(toDowngrade, toUpgrade, c.Bool("nwrap"))
+				ShowMigrationsToMigrate(toDowngrade, toUpgrade, c.Bool("nwrap"))
 
 				if !c.Bool("y") {
 					ok, err := askForConfirmation("Apply migrations?")
