@@ -3,7 +3,6 @@ package migratego
 import (
 	"testing"
 
-	"sort"
 	"time"
 
 	"strconv"
@@ -48,7 +47,7 @@ func TestMigration(t *testing.T) {
 			{Number: 1, Name: "1"},
 			{Number: 2, Name: "2"},
 		}
-		sort.Sort(ByNumber(a))
+		SortMigrationsByNumber(a)
 		So(a[0].Name, ShouldEqual, "1")
 		So(a[1].Name, ShouldEqual, "2")
 		So(a[2].Name, ShouldEqual, "3")
@@ -77,7 +76,7 @@ func TestMigration(t *testing.T) {
 				So(m.AppliedAt.Equal(oneTime), ShouldBeTrue)
 			}
 		}
-		sort.Sort(ByNumber(a))
+		SortMigrationsByNumber(a)
 		So(a[0].Name, ShouldEqual, "1")
 		So(a[1].Name, ShouldEqual, "2")
 		So(a[2].Name, ShouldEqual, "3")

@@ -20,12 +20,12 @@ func TestIndexGenerator(t *testing.T) {
 		idx.Parser("some parser")
 		So(idx.parser, ShouldEqual, "some parser")
 		So(idx.Sql(), ShouldBeEmpty)
-		idx.Columns(&IndexColumnGenerator{
+		idx.Columns(&indexColumnGenerator{
 			Column: "id",
 			Order:  "ASC",
 			Length: 10,
 		})
-		idx.Columns(&IndexColumnGenerator{
+		idx.Columns(&indexColumnGenerator{
 			Column: "id",
 			Order:  "DESC",
 		})

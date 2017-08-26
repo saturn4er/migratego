@@ -4,7 +4,11 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+	"strconv"
 	"strings"
+
+	"github.com/olekukonko/tablewriter"
+	"github.com/pkg/errors"
 )
 
 // askForConfirmation asks the user for confirmation. A user must type in "yes" or "no" and
@@ -30,4 +34,34 @@ func askForConfirmation(s string) (bool, error) {
 			return false, nil
 		}
 	}
+}
+
+func ShowMigrations(migrations []DBMigration, wrap bool) error {
+	if len(migrations) == 0 {
+		return errors.New("No migrations :(")
+	}
+	SortMigrationsByNumber(migrations)
+	table := tablewriter.NewWriter(os.Stdout)
+	var header = []string{"#", "Name", "Up", "Down", "Applied at"}
+	table.SetHeader(header)
+	table.SetColWidth(50)
+	table.SetAlignment(tablewriter.ALIGN_CENTER)
+	table.SetRowLine(true)
+	tableData := make([][]string, len(migrations))
+	for _, mi := range migrations {
+		var applied = ""
+		if mi.AppliedAt != nil {
+			applied = mi.AppliedAt.Format("02-01-2016 15:04:05")
+		}
+		tableData = append(tableData, []string{strconv.Itoa(mi.Number), mi.Name, wrapCode(mi.UpScript, wrap), wrapCode(mi.DownScript, wrap), applied})
+	}
+	table.AppendBulk(tableData)
+	table.Render()
+	return nil
+}
+func wrapCode(code string, wrap bool) string {
+	if len(code) > 47 && !wrap {
+		code = code[:47] + "..."
+	}
+	return code
 }

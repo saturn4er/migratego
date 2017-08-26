@@ -8,7 +8,7 @@ import (
 
 func TestMysqlClient(t *testing.T) {
 	Convey("MysqlDBClient", t, func() {
-		d, err := NewClient("root@tcp(127.0.0.1:3306)/migratego_test", "schema_version")
+		d, err := NewClient("root:password@tcp(127.0.0.1:3306)/migratego_test", "schema_version")
 		So(err, ShouldBeNil)
 		So(d, ShouldNotBeNil)
 		c := d.(*MysqlClient)

@@ -1,7 +1,6 @@
 package migratego
 
 import (
-	"fmt"
 	"os"
 	"sort"
 	"strconv"
@@ -19,19 +18,7 @@ type DBMigration struct {
 }
 
 func (v *DBMigration) Compare(m *DBMigration) bool {
-	if v.Number != m.Number {
-		return false
-	}
-	if v.Name != m.Name {
-		return false
-	}
-	if v.UpScript != m.UpScript {
-		return false
-	}
-	if v.DownScript != m.DownScript {
-		return false
-	}
-	return true
+	return v.Number == m.Number && v.Name == m.Name && v.UpScript == m.UpScript && v.DownScript == m.DownScript
 }
 
 func SortMigrationsByNumber(migrations []DBMigration) {
@@ -96,33 +83,4 @@ func ShowMigrationsToMigrate(toDowngrade, toUpgrade []DBMigration, wrapCode bool
 	table.SetRowLine(true)
 	table.AppendBulk(tableData)
 	table.Render()
-}
-func ShowMigrations(migrations []DBMigration, wrap bool) error {
-	if len(migrations) == 0 {
-		fmt.Println("There's no migrations yet")
-	}
-	SortMigrationsByNumber(migrations)
-	table := tablewriter.NewWriter(os.Stdout)
-	var header = []string{"#", "Name", "Up", "Down", "Applied at"}
-	table.SetHeader(header)
-	table.SetColWidth(50)
-	table.SetAlignment(tablewriter.ALIGN_CENTER)
-	table.SetRowLine(true)
-	tableData := make([][]string, len(migrations))
-	for _, mi := range migrations {
-		var applied = ""
-		if mi.AppliedAt != nil {
-			applied = mi.AppliedAt.Format("02-01-2016 15:04:05")
-		}
-		tableData = append(tableData, []string{strconv.Itoa(mi.Number), mi.Name, wrapCode(mi.UpScript, wrap), wrapCode(mi.DownScript, wrap), applied})
-	}
-	table.AppendBulk(tableData)
-	table.Render()
-	return nil
-}
-func wrapCode(code string, wrap bool) string {
-	if len(code) > 47 && !wrap {
-		code = code[:47] + "..."
-	}
-	return code
 }

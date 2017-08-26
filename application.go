@@ -8,23 +8,6 @@ import (
 	"strings"
 )
 
-type queryBuilderFunc func(QueryBuilder)
-
-type migrationExecutor interface {
-	Up(QueryBuilder)
-	Down(QueryBuilder)
-}
-type Migration struct{}
-
-func (m *Migration) Up(QueryBuilder)   {}
-func (m *Migration) Down(QueryBuilder) {}
-
-type MigrateApplication interface {
-	AddMigration(int, string, migrationExecutor)
-	SetSchemaVersionTable(string)
-	Run([]string)
-}
-
 type migrateApplication struct {
 	driver         string
 	dsn            string
@@ -53,13 +36,13 @@ func (m *migrateApplication) AddMigration(number int, name string, me migrationE
 func (m *migrateApplication) SetSchemaVersionTable(name string) {
 	m.dbVersionTable = name
 }
-func (m *migrateApplication) Run(args []string) {
-	err := RunToolCli(m, args)
+func (m *migrateApplication) Run() {
+	err := RunToolCli(m, os.Args)
 	if err != nil {
 		fmt.Println(err)
 	}
 }
-func (m *migrateApplication) getQueryBuilderScripts(p queryBuilderFunc) []string {
+func (m *migrateApplication) getQueryBuilderScripts(p func(QueryBuilder)) []string {
 	qb := getDriverQueryBuilder(m.driver)
 	p(qb)
 	return qb.Sqls()

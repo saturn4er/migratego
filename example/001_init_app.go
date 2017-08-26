@@ -18,9 +18,6 @@ func (i *InitAppMigration) Up(qb migratego.QueryBuilder) {
 		t.Column("password", "varchar(255)").NotNull()
 		t.Charset("utf8mb4")
 	})
-	qb.Table("user", func(scope migratego.TableScope) {
-		scope.RemoveColumn("1")
-	})
 }
 func (i *InitAppMigration) Down(qb migratego.QueryBuilder) {
 	qb.DropTables("user").IfExists()
