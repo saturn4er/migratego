@@ -3,7 +3,6 @@ package mysql
 import (
 	"testing"
 
-	"github.com/saturn4er/migratego"
 	. "github.com/smartystreets/goconvey/convey"
 )
 
@@ -11,7 +10,7 @@ func TestMysqlQueryBuilder_CreateTable(t *testing.T) {
 
 	Convey("QueryBuilder.CreateTable Should generate right sql", t, func() {
 		b := MysqlQueryBuilder{}
-		b.CreateTable("test_table", func(g migratego.CreateTableGenerator) {
+		b.CreateTable("test_table", func(g CreateTableGenerator) {
 			id := g.Column("id", "varchar(255)")
 			So(id.GetName(), ShouldEqual, "id")
 			So(g.Sql(), ShouldEqual, "CREATE TABLE `test_table`(`id` varchar(255) NULL)")

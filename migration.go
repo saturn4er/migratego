@@ -10,7 +10,7 @@ import (
 	"github.com/olekukonko/tablewriter"
 )
 
-type Migration struct {
+type DBMigration struct {
 	Number     int `db:"num"`
 	Name       string
 	UpScript   string     `db:"up_script"`
@@ -18,7 +18,7 @@ type Migration struct {
 	AppliedAt  *time.Time `db:"applied_at"`
 }
 
-func (v *Migration) Compare(m *Migration) bool {
+func (v *DBMigration) Compare(m *DBMigration) bool {
 	if v.Number != m.Number {
 		return false
 	}
@@ -34,7 +34,7 @@ func (v *Migration) Compare(m *Migration) bool {
 	return true
 }
 
-type ByNumber []Migration
+type ByNumber []DBMigration
 
 func (s ByNumber) Len() int {
 	return len(s)
@@ -47,7 +47,7 @@ func (s ByNumber) Less(i, j int) bool {
 func (s ByNumber) Swap(i, j int) {
 	s[i], s[j] = s[j], s[i]
 }
-func MergeMigrationsAppliedAt(to []Migration, from []Migration) []Migration {
+func MergeMigrationsAppliedAt(to []DBMigration, from []DBMigration) []DBMigration {
 	for i, mTo := range to {
 		for _, mFrom := range from {
 			if mTo.Compare(&mFrom) {
@@ -60,7 +60,7 @@ func MergeMigrationsAppliedAt(to []Migration, from []Migration) []Migration {
 }
 
 // findWayBetweenMigrations find path between two migrations list.
-func FindWayBetweenMigrations(applied, actual []Migration) (toDowngrade []Migration, toUpgrade []Migration) {
+func FindWayBetweenMigrations(applied, actual []DBMigration) (toDowngrade []DBMigration, toUpgrade []DBMigration) {
 	var sameI = -1
 	for i, a := range applied {
 		if len(actual)-1 < i || !a.Compare(&actual[i]) {
@@ -76,7 +76,7 @@ func FindWayBetweenMigrations(applied, actual []Migration) (toDowngrade []Migrat
 	}
 	return
 }
-func ShowMigrationsToMigrate(toDowngrade, toUpgrade []Migration, wrapCode bool) {
+func ShowMigrationsToMigrate(toDowngrade, toUpgrade []DBMigration, wrapCode bool) {
 	var tableData [][]string
 	for _, apl := range toDowngrade {
 		applied := ""
@@ -104,7 +104,7 @@ func ShowMigrationsToMigrate(toDowngrade, toUpgrade []Migration, wrapCode bool) 
 	table.AppendBulk(tableData)
 	table.Render()
 }
-func ShowMigrations(migrations []Migration, wrap bool) error {
+func ShowMigrations(migrations []DBMigration, wrap bool) error {
 	sort.Sort(ByNumber(migrations))
 	if len(migrations) == 0 {
 		fmt.Println("There's no migrations yet")

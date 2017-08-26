@@ -11,13 +11,16 @@ import (
 	"github.com/go-sql-driver/mysql"
 	"github.com/jmoiron/sqlx"
 	"github.com/saturn4er/barkup"
-	"github.com/saturn4er/migratego"
 )
 
 type MysqlClient struct {
 	tableName string
 	DB        *sqlx.DB
 	dsn       string
+}
+
+func (c *MysqlClient) JoinQueries(queries []string) string {
+	return strings.Join(queries, ";")
 }
 
 func (c *MysqlClient) Backup(path string) (string, error) {
@@ -53,7 +56,7 @@ func (c *MysqlClient) Backup(path string) (string, error) {
 	return export.Filename(), nil
 }
 
-func (c *MysqlClient) ApplyMigration(migration *migratego.Migration, down bool) error {
+func (c *MysqlClient) ApplyMigration(migration *DBMigration, down bool) error {
 	var query string
 	if down {
 		query = migration.DownScript
@@ -67,15 +70,15 @@ func (c *MysqlClient) ApplyMigration(migration *migratego.Migration, down bool) 
 	return nil
 }
 
-func (c *MysqlClient) InsertMigration(migration *migratego.Migration) error {
+func (c *MysqlClient) InsertMigration(migration *DBMigration) error {
 	now := time.Now()
 	migration.AppliedAt = &now
 	_, err := c.DB.NamedExec("INSERT INTO `"+c.tableName+"` (`num`, `name`, `up_script`, `down_script`,`applied_at`) VALUES (:num, :name, :up_script, :down_script, :applied_at);", migration)
 	return err
 }
 
-func (c *MysqlClient) GetAppliedMigrations() ([]migratego.Migration, error) {
-	result := []migratego.Migration{}
+func (c *MysqlClient) GetAppliedMigrations() ([]DBMigration, error) {
+	result := []DBMigration{}
 	err := c.DB.Select(&result, "SELECT `num`, `name`, `up_script`, `down_script`, `applied_at` FROM `"+c.tableName+"` ORDER BY `applied_at` ASC")
 	if err == sql.ErrNoRows {
 		return result, nil
@@ -83,7 +86,7 @@ func (c *MysqlClient) GetAppliedMigrations() ([]migratego.Migration, error) {
 	return result, err
 }
 
-func (c *MysqlClient) RemoveMigration(migration *migratego.Migration) error {
+func (c *MysqlClient) RemoveMigration(migration *DBMigration) error {
 	_, err := c.DB.Exec("DELETE FROM `"+c.tableName+"` WHERE `num`=?", migration.Number)
 	return err
 }
@@ -114,7 +117,7 @@ func (c *MysqlClient) dbVersionTableExists() (bool, error) {
 	return true, nil
 }
 func (c *MysqlClient) createDBVersionTable() error {
-	t := (&MysqlQueryBuilder{}).CreateTable(c.tableName, func(table migratego.CreateTableGenerator) {
+	t := (&MysqlQueryBuilder{}).CreateTable(c.tableName, func(table CreateTableGenerator) {
 		table.Column("num", "int").NotNull().Primary()
 		table.Column("name", "text").NotNull()
 		table.Column("up_script", "text").NotNull()
@@ -127,7 +130,7 @@ func (c *MysqlClient) createDBVersionTable() error {
 	}
 	return nil
 }
-func NewClient(dsn, transactionsTableName string) (migratego.DBClient, error) {
+func NewClient(dsn, transactionsTableName string) (DBClient, error) {
 	result := new(MysqlClient)
 	d, err := mysql.ParseDSN(dsn)
 	if err != nil {

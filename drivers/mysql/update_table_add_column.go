@@ -2,12 +2,10 @@ package mysql
 
 import (
 	"strings"
-
-	"github.com/saturn4er/migratego"
 )
 
-type UpdateTableAddColumnGenerator struct {
-	tableScope    *TableScope
+type updateTableAddColumnGenerator struct {
+	tableScope    *tableScope
 	name          string
 	fType         string
 	binary        bool
@@ -22,13 +20,13 @@ type UpdateTableAddColumnGenerator struct {
 	after         string
 }
 
-func (f *UpdateTableAddColumnGenerator) GetName() string {
+func (f *updateTableAddColumnGenerator) GetName() string {
 	return f.name
 }
 
-func (f *UpdateTableAddColumnGenerator) Index(name string, unique bool, order string, length int) migratego.IndexGenerator {
+func (f *updateTableAddColumnGenerator) Index(name string, unique bool, order string, length int) IndexGenerator {
 	index := f.tableScope.AddIndex(name, unique)
-	index.Columns(&IndexColumnGenerator{
+	index.Columns(&indexColumnGenerator{
 		Column: f.name,
 		Order:  order,
 		Length: length,
@@ -37,42 +35,42 @@ func (f *UpdateTableAddColumnGenerator) Index(name string, unique bool, order st
 }
 
 // NotNull marks column as NOT NULL
-func (f *UpdateTableAddColumnGenerator) NotNull() migratego.UpdateTableAddColumnGenerator {
+func (f *updateTableAddColumnGenerator) NotNull() UpdateTableAddColumnGenerator {
 	f.notNull = true
 	return f
 }
 
 // Binary marks column as BINARY
-func (f *UpdateTableAddColumnGenerator) Binary() migratego.UpdateTableAddColumnGenerator {
+func (f *updateTableAddColumnGenerator) Binary() UpdateTableAddColumnGenerator {
 	f.binary = true
 	return f
 }
-func (f *UpdateTableAddColumnGenerator) ZeroFill() migratego.UpdateTableAddColumnGenerator {
+func (f *updateTableAddColumnGenerator) ZeroFill() UpdateTableAddColumnGenerator {
 	f.zeroFill = true
 	return f
 }
-func (f *UpdateTableAddColumnGenerator) Unsigned() migratego.UpdateTableAddColumnGenerator {
+func (f *updateTableAddColumnGenerator) Unsigned() UpdateTableAddColumnGenerator {
 	f.unsigned = true
 	return f
 }
-func (f *UpdateTableAddColumnGenerator) Generated() migratego.UpdateTableAddColumnGenerator {
+func (f *updateTableAddColumnGenerator) Generated() UpdateTableAddColumnGenerator {
 	f.generated = true
 	return f
 }
-func (f *UpdateTableAddColumnGenerator) DefaultValue(v string) migratego.UpdateTableAddColumnGenerator {
+func (f *updateTableAddColumnGenerator) DefaultValue(v string) UpdateTableAddColumnGenerator {
 	f.defaultValue = v
 	return f
 }
-func (f *UpdateTableAddColumnGenerator) Comment(v string) migratego.UpdateTableAddColumnGenerator {
+func (f *updateTableAddColumnGenerator) Comment(v string) UpdateTableAddColumnGenerator {
 	f.comment = v
 	return f
 }
-func (f *UpdateTableAddColumnGenerator) After(field string) migratego.UpdateTableAddColumnGenerator {
+func (f *updateTableAddColumnGenerator) After(field string) UpdateTableAddColumnGenerator {
 	f.after = field
 	return f
 }
 
-func (f *UpdateTableAddColumnGenerator) Sql() string {
+func (f *updateTableAddColumnGenerator) Sql() string {
 	sql := "ALTER TABLE " + wrapName(f.tableScope.name) + " ADD COLUMN " + wrapName(f.name) + " " + string(f.fType)
 	if f.unsigned {
 		sql += " UNSIGNED"

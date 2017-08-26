@@ -1,19 +1,17 @@
 package mysql
 
-import "github.com/saturn4er/migratego"
-
-type TableScope struct {
+type tableScope struct {
 	name    string
 	builder *MysqlQueryBuilder
 }
 type UpdateTableIndexes struct {
 }
 
-func (t *TableScope) AddColumn(name string, Type string) migratego.UpdateTableAddColumnGenerator {
+func (t *tableScope) AddColumn(name string, Type string) UpdateTableAddColumnGenerator {
 	if name == "" {
 		panic("Can't add column to table with empty name")
 	}
-	cg := &UpdateTableAddColumnGenerator{
+	cg := &updateTableAddColumnGenerator{
 		tableScope: t,
 		name:       name,
 		fType:      Type,
@@ -21,7 +19,7 @@ func (t *TableScope) AddColumn(name string, Type string) migratego.UpdateTableAd
 	t.builder.generators = append(t.builder.generators, cg)
 	return cg
 }
-func (t *TableScope) RemoveColumn(name string) migratego.TableScope {
+func (t *tableScope) RemoveColumn(name string) TableScope {
 	q := rawQuery("COLUMN " + wrapName(name))
 	g := AlterTableGenerator{
 		table:     t.name,
@@ -32,7 +30,7 @@ func (t *TableScope) RemoveColumn(name string) migratego.TableScope {
 	return t
 }
 
-func (t *TableScope) Rename(newName string) migratego.TableScope {
+func (t *tableScope) Rename(newName string) TableScope {
 	if newName == "" {
 		panic("New name of table should not be empty")
 	}
@@ -40,7 +38,7 @@ func (t *TableScope) Rename(newName string) migratego.TableScope {
 	t.name = newName
 	return t
 }
-func (t *TableScope) AddIndex(name string, unique bool) migratego.IndexGenerator {
+func (t *tableScope) AddIndex(name string, unique bool) IndexGenerator {
 	index := newIndexGenerator(name, unique)
 
 	g := AlterTableGenerator{
@@ -51,7 +49,7 @@ func (t *TableScope) AddIndex(name string, unique bool) migratego.IndexGenerator
 	t.builder.generators = append(t.builder.generators, &g)
 	return index
 }
-func (t *TableScope) RemoveIndex(name string) migratego.TableScope {
+func (t *tableScope) RemoveIndex(name string) TableScope {
 	q := rawQuery("INDEX " + wrapName(name))
 	g := AlterTableGenerator{
 		table:     t.name,
@@ -61,9 +59,9 @@ func (t *TableScope) RemoveIndex(name string) migratego.TableScope {
 	t.builder.generators = append(t.builder.generators, &g)
 	return t
 }
-func (t *TableScope) Delete() {
+func (t *tableScope) Delete() {
 	t.builder.generators = append(t.builder.generators, &dropTablesGenerator{tables: []string{t.name}})
 }
-func (t *TableScope) DeleteIfExists() {
+func (t *tableScope) DeleteIfExists() {
 	t.builder.generators = append(t.builder.generators, &dropTablesGenerator{ifExists: true, tables: []string{t.name}})
 }

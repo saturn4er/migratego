@@ -2,8 +2,6 @@ package mysql
 
 import (
 	"strings"
-
-	"github.com/saturn4er/migratego"
 )
 
 type CreateTableColumns []CreateTableColumn
@@ -38,7 +36,7 @@ func (f *CreateTableColumn) GetName() string {
 }
 
 // AutoIncrement define column as AUTO_INCREMENT and new PRIMARY INDEX
-func (f *CreateTableColumn) AutoIncrement(primaryComment ...string) migratego.CreateTableColumnGenerator {
+func (f *CreateTableColumn) AutoIncrement(primaryComment ...string) CreateTableColumnGenerator {
 	f.autoIncrement = true
 	f.Primary(primaryComment...)
 	return f
@@ -47,7 +45,7 @@ func (f *CreateTableColumn) AutoIncrement(primaryComment ...string) migratego.Cr
 // Index add index to table for this column
 // Usage: Index("index_name", true, "DESC", 10)
 // This will create unique index "index_name" and it will add this column to it
-func (f *CreateTableColumn) Index(name string, unique bool, params ...interface{}) migratego.IndexGenerator {
+func (f *CreateTableColumn) Index(name string, unique bool, params ...interface{}) IndexGenerator {
 	if name == "" {
 		name = "idx_" + f.name
 	}
@@ -72,7 +70,7 @@ func (f *CreateTableColumn) Index(name string, unique bool, params ...interface{
 
 	}
 
-	index.Columns(&IndexColumnGenerator{
+	index.Columns(&indexColumnGenerator{
 		Column: f.name,
 		Order:  order,
 		Length: length,
@@ -80,7 +78,7 @@ func (f *CreateTableColumn) Index(name string, unique bool, params ...interface{
 	f.table.indexes = append(f.table.indexes, index)
 	return index
 }
-func (f *CreateTableColumn) Primary(comment ...string) migratego.CreateTableColumnGenerator {
+func (f *CreateTableColumn) Primary(comment ...string) CreateTableColumnGenerator {
 	var c string
 	if len(comment) > 0 {
 		c = comment[0]
@@ -90,33 +88,33 @@ func (f *CreateTableColumn) Primary(comment ...string) migratego.CreateTableColu
 }
 
 // NotNull marks column as NOT NULL
-func (f *CreateTableColumn) NotNull() migratego.CreateTableColumnGenerator {
+func (f *CreateTableColumn) NotNull() CreateTableColumnGenerator {
 	f.notNull = true
 	return f
 }
 
 // Binary marks column as BINARY
-func (f *CreateTableColumn) Binary() migratego.CreateTableColumnGenerator {
+func (f *CreateTableColumn) Binary() CreateTableColumnGenerator {
 	f.binary = true
 	return f
 }
-func (f *CreateTableColumn) ZeroFill() migratego.CreateTableColumnGenerator {
+func (f *CreateTableColumn) ZeroFill() CreateTableColumnGenerator {
 	f.zeroFill = true
 	return f
 }
-func (f *CreateTableColumn) Unsigned() migratego.CreateTableColumnGenerator {
+func (f *CreateTableColumn) Unsigned() CreateTableColumnGenerator {
 	f.unsigned = true
 	return f
 }
-func (f *CreateTableColumn) Generated() migratego.CreateTableColumnGenerator {
+func (f *CreateTableColumn) Generated() CreateTableColumnGenerator {
 	f.generated = true
 	return f
 }
-func (f *CreateTableColumn) DefaultValue(v string) migratego.CreateTableColumnGenerator {
+func (f *CreateTableColumn) DefaultValue(v string) CreateTableColumnGenerator {
 	f.defaultValue = v
 	return f
 }
-func (f *CreateTableColumn) Comment(v string) migratego.CreateTableColumnGenerator {
+func (f *CreateTableColumn) Comment(v string) CreateTableColumnGenerator {
 	f.comment = v
 	return f
 }

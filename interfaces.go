@@ -78,16 +78,18 @@ type TableScope interface {
 	Delete()
 }
 type DBClient interface {
+	// Join multiple queries in one query
+	JoinQueries(queries []string) string
 	// PrepareTransactionsTable checks if table with migrations exists and creates it, if it doesn't
 	PrepareTransactionsTable() error
 	// Backup dumps database to some file in folder and returns path to it
 	Backup(path string) (string, error)
 	// InsertMigration adds migration to migrations table
-	InsertMigration(migration *Migration) error
+	InsertMigration(migration *DBMigration) error
 	// RemoveMigration removes migration from migrations table
-	RemoveMigration(migration *Migration) error
+	RemoveMigration(migration *DBMigration) error
 	// ApplyMigration executes UpScript if down is false. Execute DownScript of down is true
-	ApplyMigration(migration *Migration, down bool) error
+	ApplyMigration(migration *DBMigration, down bool) error
 	// GetAppliedMigrations returns list of migrations in migrations table
-	GetAppliedMigrations() ([]Migration, error)
+	GetAppliedMigrations() ([]DBMigration, error)
 }

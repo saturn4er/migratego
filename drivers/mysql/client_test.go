@@ -3,7 +3,6 @@ package mysql
 import (
 	"testing"
 
-	"github.com/saturn4er/migratego"
 	. "github.com/smartystreets/goconvey/convey"
 )
 
@@ -25,10 +24,10 @@ func TestMysqlClient(t *testing.T) {
 			So(err, ShouldBeNil)
 			So(exists, ShouldBeTrue)
 		})
-		testMigration := &migratego.Migration{
+		testMigration := &DBMigration{
 			Name:   "test migration",
 			Number: 1,
-			UpScript: NewCreateTableGenerator("test_table", func(c migratego.CreateTableGenerator) {
+			UpScript: NewCreateTableGenerator("test_table", func(c CreateTableGenerator) {
 				c.Column("id", "int")
 			}).Sql(),
 			DownScript: NewDropTablesGenerator("test_table").Sql(),

@@ -6,19 +6,22 @@ import (
 )
 
 func init() {
-	app.AddMigration(1, "initApp", initAppUp, initAppDown)
+	app.AddMigration(1, "initApp", new(InitAppMigration))
 }
-func initAppUp(s migratego.QueryBuilder) {
-	s.CreateTable("user", func(t migratego.CreateTableGenerator) {
+
+type InitAppMigration struct{}
+
+func (i *InitAppMigration) Up(qb migratego.QueryBuilder) {
+	qb.CreateTable("user", func(t migratego.CreateTableGenerator) {
 		t.Column("id", "int").Primary()
 		t.Column("name", "varchar(255)").NotNull()
 		t.Column("password", "varchar(255)").NotNull()
 		t.Charset("utf8mb4")
 	})
-	s.Table("user", func(scope migratego.TableScope) {
+	qb.Table("user", func(scope migratego.TableScope) {
 		scope.RemoveColumn("1")
 	})
 }
-func initAppDown(s migratego.QueryBuilder) {
-	s.DropTables("user").IfExists()
+func (i *InitAppMigration) Down(qb migratego.QueryBuilder) {
+	qb.DropTables("user").IfExists()
 }

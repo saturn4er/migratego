@@ -5,8 +5,8 @@
 Library to write and build migrations using Golang.
 
 ## Dependencies
-- Go 1.7+
-- mysqldump ( to dump mysql database before applying migrations
+- Go 1.9+
+- mysqldump ( to dump mysql database before applying migrations )
 
 ## Installation
 
@@ -35,53 +35,27 @@ package main
 
 import (
 	"github.com/saturn4er/migratego"
-	"github.com/saturn4er/migratego/types"
+	_ "github.com/saturn4er/migratego/drivers/mysql"
 )
 
-
 func init() {
-	app.AddMigration(2, "initApp", initAppUp, initAppDown)
+	app.AddMigration(1, "initApp", new(InitAppMigration))
 }
-func initAppUp(s migratego.QueryBuilder) {
-	s.CreateTable("user", func(t types.CreateTableGenerator) {
+
+type InitAppMigration struct{}
+
+func (i *InitAppMigration) Up(qb migratego.QueryBuilder) {
+	qb.CreateTable("user", func(t migratego.CreateTableGenerator) {
 		t.Column("id", "int").Primary()
 		t.Column("name", "varchar(255)").NotNull()
 		t.Column("password", "varchar(255)").NotNull()
-
+		t.Charset("utf8mb4")
+	})
+	qb.Table("user", func(scope migratego.TableScope) {
+		scope.RemoveColumn("1")
 	})
 }
-func initAppDown(s migratego.QueryBuilder) {
-	s.DropTables("user").IfExists()
+func (i *InitAppMigration) Down(qb migratego.QueryBuilder) {
+	qb.DropTables("user").IfExists()
 }
 ```
-
-## Sql generators
- * Drop tables
- * Create Table
-   * Column
-     * Primary
-     * Not null
-     * Unsigned
-     * Binary
-     * Zero Fill
-     * Generated
-     * Default Value
-     * Comment
-     * Index
-     * Auto Increment
-   * Index
-   * Foreign key (TODO)
- * Table
-   * Rename
-   * Delete
-   * Add column
-   * Add index
-   * Remove index
-   * Update column (TODO)
- * Raw Query
- 
-
-## TODO
-- Add Postgres
-- Foreign Key
-- Tool to Create initial migration by existing tables

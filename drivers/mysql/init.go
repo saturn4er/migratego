@@ -6,6 +6,6 @@ func init() {
 	migratego.DefineDriver("mysql", QueryBuilderConstructor, NewClient)
 }
 
-func QueryBuilderConstructor() migratego.QueryBuilder {
+func QueryBuilderConstructor() QueryBuilder {
 	return &MysqlQueryBuilder{}
 }

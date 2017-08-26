@@ -2,44 +2,42 @@ package mysql
 
 import (
 	"strings"
-
-	"github.com/saturn4er/migratego"
 )
 
-type IndexGenerator struct {
+type indexGenerator struct {
 	name         string
 	unique       bool
-	columns      []migratego.IndexColumnGenerator
+	columns      []IndexColumnGenerator
 	parser       string
 	keyBlockSize int
 	comment      string
 }
 
-func (i *IndexGenerator) Name(n string) migratego.IndexGenerator {
+func (i *indexGenerator) Name(n string) IndexGenerator {
 	i.name = n
 	return i
 }
-func (i *IndexGenerator) Columns(c ...migratego.IndexColumnGenerator) migratego.IndexGenerator {
+func (i *indexGenerator) Columns(c ...IndexColumnGenerator) IndexGenerator {
 	i.columns = append(i.columns, c...)
 	return i
 }
-func (i *IndexGenerator) Comment(c string) migratego.IndexGenerator {
+func (i *indexGenerator) Comment(c string) IndexGenerator {
 	i.comment = c
 	return i
 }
-func (i *IndexGenerator) Unique() migratego.IndexGenerator {
+func (i *indexGenerator) Unique() IndexGenerator {
 	i.unique = true
 	return i
 }
-func (i *IndexGenerator) KeyBlockSize(s int) migratego.IndexGenerator {
+func (i *indexGenerator) KeyBlockSize(s int) IndexGenerator {
 	i.keyBlockSize = s
 	return i
 }
-func (i *IndexGenerator) Parser(p string) migratego.IndexGenerator {
+func (i *indexGenerator) Parser(p string) IndexGenerator {
 	i.parser = p
 	return i
 }
-func (i *IndexGenerator) Sql() string {
+func (i *indexGenerator) Sql() string {
 	var sql string
 	if len(i.columns) == 0 {
 		return ""
@@ -55,8 +53,8 @@ func (i *IndexGenerator) Sql() string {
 	return sql
 }
 
-func newIndexGenerator(name string, unique bool) migratego.IndexGenerator {
-	result := &IndexGenerator{
+func newIndexGenerator(name string, unique bool) IndexGenerator {
+	result := &indexGenerator{
 		name:   name,
 		unique: unique,
 	}

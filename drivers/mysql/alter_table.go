@@ -1,7 +1,5 @@
 package mysql
 
-import "github.com/saturn4er/migratego"
-
 const (
 	AlterTableAdd  = "ADD"
 	AlterTableDrop = "DROP"
@@ -10,7 +8,7 @@ const (
 type AlterTableGenerator struct {
 	table     string
 	operation string
-	query     migratego.Querier
+	query     Querier
 }
 
 func (a *AlterTableGenerator) Sql() string {

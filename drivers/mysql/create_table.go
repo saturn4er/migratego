@@ -2,8 +2,6 @@ package mysql
 
 import (
 	"strings"
-
-	"github.com/saturn4er/migratego"
 )
 
 type IndexType string
@@ -15,8 +13,8 @@ type createTableGenerator struct {
 	engine        string
 	comment       string
 	charset       string
-	columns       []migratego.CreateTableColumnGenerator
-	indexes       []migratego.IndexGenerator
+	columns       []CreateTableColumnGenerator
+	indexes       []IndexGenerator
 	primaryKey    *PrimaryKeyGenerator
 	uniqueIndexes map[string]string
 }
@@ -52,19 +50,19 @@ func (c *createTableGenerator) Sql() string {
 	}
 	return sql
 }
-func (c *createTableGenerator) Charset(charset string) migratego.CreateTableGenerator {
+func (c *createTableGenerator) Charset(charset string) CreateTableGenerator {
 	c.charset = charset
 	return c
 }
-func (c *createTableGenerator) Comment(comment string) migratego.CreateTableGenerator {
+func (c *createTableGenerator) Comment(comment string) CreateTableGenerator {
 	c.comment = comment
 	return c
 }
-func (c *createTableGenerator) Engine(engine string) migratego.CreateTableGenerator {
+func (c *createTableGenerator) Engine(engine string) CreateTableGenerator {
 	c.engine = engine
 	return c
 }
-func (c *createTableGenerator) Column(name string, Type string) migratego.CreateTableColumnGenerator {
+func (c *createTableGenerator) Column(name string, Type string) CreateTableColumnGenerator {
 	result := &CreateTableColumn{
 		table: c,
 		name:  name,
@@ -73,12 +71,12 @@ func (c *createTableGenerator) Column(name string, Type string) migratego.Create
 	c.columns = append(c.columns, result)
 	return result
 }
-func (c *createTableGenerator) Index(name string, unique bool) migratego.IndexGenerator {
+func (c *createTableGenerator) Index(name string, unique bool) IndexGenerator {
 	index := newIndexGenerator(name, unique)
 	c.indexes = append(c.indexes, index)
 	return index
 }
-func NewCreateTableGenerator(name string, sc func(migratego.CreateTableGenerator)) migratego.CreateTableGenerator {
+func NewCreateTableGenerator(name string, sc func(CreateTableGenerator)) CreateTableGenerator {
 	result := &createTableGenerator{
 		name:          name,
 		uniqueIndexes: make(map[string]string),

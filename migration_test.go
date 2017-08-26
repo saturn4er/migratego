@@ -13,7 +13,7 @@ import (
 
 func TestMigration(t *testing.T) {
 	Convey("Should compare migrations", t, func() {
-		tpl := Migration{
+		tpl := DBMigration{
 			Number:     1,
 			Name:       "test",
 			UpScript:   "SELECT 1",
@@ -42,8 +42,8 @@ func TestMigration(t *testing.T) {
 		So(a.Compare(&b), ShouldBeFalse)
 
 	})
-	Convey("Should test Migration.Compare", t, func() {
-		a := []Migration{
+	Convey("Should test DBMigration.Compare", t, func() {
+		a := []DBMigration{
 			{Number: 3, Name: "3"},
 			{Number: 1, Name: "1"},
 			{Number: 2, Name: "2"},
@@ -54,14 +54,14 @@ func TestMigration(t *testing.T) {
 		So(a[2].Name, ShouldEqual, "3")
 	})
 	Convey("Should merge Migrations AppliedAt", t, func() {
-		a := []Migration{
+		a := []DBMigration{
 			{Number: 3, Name: "3"},
 			{Number: 1, Name: "1"},
 			{Number: 2, Name: "2"},
 		}
 		oneTime := time.Now()
 		threeTime := time.Now()
-		b := []Migration{
+		b := []DBMigration{
 			{Number: 3, Name: "3", AppliedAt: &oneTime},
 			{Number: 1, Name: "1"},
 			{Number: 2, Name: "2", AppliedAt: &threeTime},
@@ -86,8 +86,8 @@ func TestMigration(t *testing.T) {
 		m0 := migrationByNumber(0)
 		m1 := migrationByNumber(1)
 		m2 := migrationByNumber(0)
-		migrationsA := []Migration{*m0, *m1}
-		migrationsB := []Migration{*m0, *m2}
+		migrationsA := []DBMigration{*m0, *m1}
+		migrationsB := []DBMigration{*m0, *m2}
 		down, up := FindWayBetweenMigrations(migrationsA, migrationsB)
 		So(down, ShouldHaveLength, 1)
 		So(up, ShouldHaveLength, 1)
@@ -95,8 +95,8 @@ func TestMigration(t *testing.T) {
 		So(up[0].Compare(m2), ShouldBeTrue)
 	})
 }
-func migrationByNumber(i int) *Migration {
-	return &Migration{
+func migrationByNumber(i int) *DBMigration {
+	return &DBMigration{
 		Number: i,
 		Name:   strconv.Itoa(i),
 	}
