@@ -34,19 +34,12 @@ func (v *DBMigration) Compare(m *DBMigration) bool {
 	return true
 }
 
-type ByNumber []DBMigration
-
-func (s ByNumber) Len() int {
-	return len(s)
+func SortMigrationsByNumber(migrations []DBMigration) {
+	sort.Slice(migrations, func(i, j int) bool {
+		return migrations[i].Number < migrations[j].Number
+	})
 }
 
-func (s ByNumber) Less(i, j int) bool {
-	return s[i].Number < s[j].Number
-}
-
-func (s ByNumber) Swap(i, j int) {
-	s[i], s[j] = s[j], s[i]
-}
 func MergeMigrationsAppliedAt(to []DBMigration, from []DBMigration) []DBMigration {
 	for i, mTo := range to {
 		for _, mFrom := range from {
@@ -105,10 +98,10 @@ func ShowMigrationsToMigrate(toDowngrade, toUpgrade []DBMigration, wrapCode bool
 	table.Render()
 }
 func ShowMigrations(migrations []DBMigration, wrap bool) error {
-	sort.Sort(ByNumber(migrations))
 	if len(migrations) == 0 {
 		fmt.Println("There's no migrations yet")
 	}
+	SortMigrationsByNumber(migrations)
 	table := tablewriter.NewWriter(os.Stdout)
 	var header = []string{"#", "Name", "Up", "Down", "Applied at"}
 	table.SetHeader(header)

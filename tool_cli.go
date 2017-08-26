@@ -3,7 +3,6 @@ package migratego
 import (
 	"errors"
 	"fmt"
-	"sort"
 
 	"github.com/urfave/cli"
 )
@@ -93,7 +92,7 @@ func RunToolCli(m *migrateApplication, args []string) error {
 					}
 					fmt.Println("Backup created at ", backupFilePath)
 				}
-				sort.Sort(ByNumber(m.migrations))
+				SortMigrationsByNumber(m.migrations)
 				applied, err := client.GetAppliedMigrations()
 				if err != nil {
 					return err
