@@ -29,7 +29,7 @@ func checkDriver(driver string) bool {
 func getDriverQueryBuilder(driver string) QueryBuilder {
 	d, ok := drivers[driver]
 	if !ok {
-		panic("Unknown driver:" + driver)
+		panic("Unknown driver: " + driver)
 	}
 	return d.QueryBuilderConstructor()
 
@@ -37,7 +37,7 @@ func getDriverQueryBuilder(driver string) QueryBuilder {
 func getDriverClient(driver, dsn, transactionsTableName string) (DBClient, error) {
 	d, ok := drivers[driver]
 	if !ok {
-		panic("Unknown driver:" + driver)
+		panic("Unknown driver: " + driver)
 	}
 	return d.DBClientConstructor(dsn, transactionsTableName)
 }
